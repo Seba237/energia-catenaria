@@ -446,31 +446,37 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
     if (user) {
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('app-root').style.display    = 'flex';
-      document.getElementById('user-email').textContent    = user.email;
+      document.getElementById('user-email').textContent    = user.email.replace('@energiacatenaria.app','');
     } else {
       document.getElementById('login-screen').style.display = 'flex';
       document.getElementById('app-root').style.display    = 'none';
     }
   });
 
-  // Login
+  // Dominio interno para convertir usuario → email ficticio
+  const DOMINIO = '@energiacatenaria.app';
+
+  // Login — convierte "sebastian" → "sebastian@energiacatenaria.app"
   window.doLogin = async () => {
-    const email = document.getElementById('login-email').value.trim();
+    let usuario = document.getElementById('login-usuario').value.trim().toLowerCase();
     const pass  = document.getElementById('login-pass').value;
     const errEl = document.getElementById('login-error');
     const btn   = document.getElementById('login-btn');
     errEl.textContent = '';
+    if (!usuario || !pass) { errEl.textContent = 'Completá usuario y contraseña.'; return; }
+    // Si ya tiene @ lo usamos directo (compatibilidad), si no le agregamos el dominio
+    const email = usuario.includes('@') ? usuario : usuario + DOMINIO;
     btn.disabled = true;
     btn.textContent = 'Ingresando...';
     try {
       await signInWithEmailAndPassword(auth, email, pass);
     } catch(e) {
       const msgs = {
-        'auth/invalid-credential':    'Usuario o contraseña incorrectos.',
-        'auth/user-not-found':        'Usuario no encontrado.',
-        'auth/wrong-password':        'Contraseña incorrecta.',
-        'auth/too-many-requests':     'Demasiados intentos. Intentá más tarde.',
-        'auth/invalid-email':         'Email inválido.',
+        'auth/invalid-credential': 'Usuario o contraseña incorrectos.',
+        'auth/user-not-found':     'Usuario no encontrado.',
+        'auth/wrong-password':     'Contraseña incorrecta.',
+        'auth/too-many-requests':  'Demasiados intentos. Intentá más tarde.',
+        'auth/invalid-email':      'Usuario inválido.',
       };
       errEl.textContent = msgs[e.code] || 'Error al ingresar. Verificá tus datos.';
       btn.disabled = false;
@@ -503,10 +509,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
     <!-- Formulario -->
     <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:1.75rem 1.5rem;backdrop-filter:blur(10px)">
       <div style="margin-bottom:1rem">
-        <label style="display:block;font-size:.7rem;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.4rem">Email</label>
-        <input id="login-email" type="email" placeholder="usuario@ejemplo.com" onkeydown="loginKeydown(event)"
+        <label style="display:block;font-size:.7rem;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.4rem">Usuario</label>
+        <input id="login-usuario" type="text" placeholder="Tu nombre de usuario" onkeydown="loginKeydown(event)"
           style="width:100%;padding:.8rem 1rem;background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.15);border-radius:10px;color:#fff;font-family:inherit;font-size:.95rem;outline:none;-webkit-appearance:none"
-          autocomplete="email" autocapitalize="none">
+          autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false">
       </div>
       <div style="margin-bottom:1.25rem">
         <label style="display:block;font-size:.7rem;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.4rem">Contraseña</label>
