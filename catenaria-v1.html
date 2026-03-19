@@ -2595,14 +2595,20 @@ const PIQ_OBS = {"3-15-37": "SECC AEREO TY", "3-15-38": "SECC AEREO TY", "3-16-1
 // BOTÓN ATRÁS DEL CELU
 // ===========================
 let navStack = ['home'];
+let handlingBack = false;
 
-// Pushear estado inicial al cargar
+// Al cargar: pushear dos estados — uno base para poder salir, uno para la app
 window.addEventListener('load', () => {
+  history.replaceState({ screen: 'exit' }, '', '');
   history.pushState({ screen: 'home' }, '', '');
 });
 
 // Interceptar botón atrás del celu
-window.addEventListener('popstate', () => {
+window.addEventListener('popstate', (e) => {
+  if (handlingBack) return;
+  handlingBack = true;
+  setTimeout(() => { handlingBack = false; }, 300);
+
   // Si el modal de protección está abierto → cerrarlo primero
   const modalProt = document.getElementById('modal-proteccion');
   if (modalProt && modalProt.style.display === 'flex') {
@@ -2610,32 +2616,36 @@ window.addEventListener('popstate', () => {
     history.pushState({ screen: currentScreen }, '', '');
     return;
   }
-  // Si ya estás en Home → salir de la app
-  if (navStack.length <= 1 || currentScreen === 'home') {
-    // No pushear — dejar que el navegador salga
+
+  // Si llegamos al estado base 'exit' → salir de la app
+  if (e.state && e.state.screen === 'exit') {
+    return; // dejar salir
+  }
+
+  // Si estamos en home → dejar salir
+  if (currentScreen === 'home' || navStack.length <= 1) {
+    history.back(); // ir al estado 'exit'
     return;
   }
-  // Si hay pantallas anteriores → navegar atrás
+
+  // Navegar a pantalla anterior
   navStack.pop();
   const anterior = navStack[navStack.length - 1];
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById('screen-' + anterior)?.classList.add('active');
-  document.getElementById('bodyScroll').scrollTop = 0;
+  const orig = showScreen.__orig || showScreen;
+  orig(anterior);
   currentScreen = anterior;
-  // Mantener estado solo si no llegamos al home
-  if (anterior !== 'home') {
-    history.pushState({ screen: anterior }, '', '');
-  }
+
+  // Pushear para mantener historia
+  history.pushState({ screen: anterior }, '', '');
 });
 
 // Registrar cada cambio de pantalla en el stack
-const _showScreen = showScreen;
+showScreen.__orig = showScreen;
 showScreen = function(id) {
-  _showScreen(id);
+  showScreen.__orig(id);
   if (id === 'home') {
     navStack = ['home'];
   } else {
-    // Evitar duplicados consecutivos
     if (navStack[navStack.length - 1] !== id) {
       navStack.push(id);
     }
