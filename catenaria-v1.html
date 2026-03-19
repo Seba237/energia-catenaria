@@ -2079,9 +2079,8 @@ function goBackFromMaterials() {
   navegarA('home');
 }
 
-function showFallas() {
-  showScreen('fallas');
-  if (navStack[navStack.length-1] !== 'fallas') navStack.push('fallas');
+function renderFallasContent() {
+
   const c = document.getElementById('fallas-content');
   c.innerHTML = `
     <div style="padding:1rem;display:flex;flex-direction:column;gap:1rem">
@@ -2115,7 +2114,14 @@ function showFallas() {
         </div>
       </button>
     </div>`;
-  }
+  
+}
+
+function showFallas() {
+  showScreen('fallas');
+  if (navStack[navStack.length-1] !== 'fallas') navStack.push('fallas');
+  renderFallasContent();
+}
 
 function showFallasCatenaria() {
   const c = document.getElementById('fallas-content');
@@ -2638,17 +2644,9 @@ window.addEventListener('popstate', () => {
 
 
 function irA(id) {
-  // irA solo cambia la pantalla visualmente, sin tocar el navStack
   if (id === 'fallas') {
-    // Re-renderizar contenido de fallas sin modificar stack
     showScreen('fallas');
-    const c = document.getElementById('fallas-content');
-    if (c) {
-      // Re-usar el innerHTML builder de showFallas pero sin push al stack
-      const tempStack = navStack.slice();
-      showFallas();
-      navStack = tempStack; // restaurar stack original
-    }
+    renderFallasContent();
     return;
   } else if (id === 'home') {
     showScreen('home');
