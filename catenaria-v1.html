@@ -2621,8 +2621,17 @@ window.addEventListener('popstate', () => {
   if (navStack.length > 1) {
     navStack.pop();
     const anterior = navStack[navStack.length - 1];
-    showScreen(anterior);
-    currentScreen = anterior;
+    // Algunas pantallas necesitan re-renderizar su contenido
+    if (anterior === 'fallas') {
+      showFallas();
+    } else if (anterior === 'home') {
+      showScreen('home');
+      currentScreen = 'home';
+      navStack = ['home'];
+    } else {
+      showScreen(anterior);
+      currentScreen = anterior;
+    }
   } else {
     showScreen('home');
     currentScreen = 'home';
