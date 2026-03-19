@@ -2603,6 +2603,7 @@ window.addEventListener('load', () => {
 
 // Interceptar botón atrás
 window.addEventListener('popstate', () => {
+  dbg('POPSTATE | screen=' + currentScreen + ' | stack=' + JSON.stringify(navStack));
   // Siempre re-pushear para que el navegador nunca salga
   history.pushState(null, '', window.location.href);
 
@@ -2624,6 +2625,17 @@ window.addEventListener('popstate', () => {
 });
 
 // irA: navega visualmente sin modificar el stack
+
+function dbg(msg) {
+  const el = document.getElementById('debug-log');
+  if (el) {
+    const line = document.createElement('div');
+    line.textContent = new Date().toLocaleTimeString() + ' ' + msg;
+    el.insertBefore(line, el.firstChild);
+    if (el.children.length > 15) el.removeChild(el.lastChild);
+  }
+}
+
 function irA(id) {
   if (id === 'fallas') {
     // Fallas necesita re-renderizar contenido
@@ -2640,6 +2652,7 @@ function irA(id) {
 
 // navegarA: cambia pantalla Y registra en stack
 function navegarA(id) {
+  dbg('navegarA(' + id + ') | antes stack=' + JSON.stringify(navStack));
   if (id === 'home') {
     navStack = ['home'];
   } else {
@@ -3003,5 +3016,10 @@ if ('serviceWorker' in navigator) {
   </div>
 </div>
 
+
+<!-- DEBUG PANEL -->
+<div id="debug-panel" style="position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,.85);color:#0f0;font-family:monospace;font-size:.7rem;padding:.4rem .6rem;z-index:99999;max-height:120px;overflow-y:auto">
+  <div id="debug-log">Debug activo...</div>
+</div>
 </body>
 </html>
