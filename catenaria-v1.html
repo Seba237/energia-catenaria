@@ -2591,28 +2591,50 @@ const PIQ_OBS = {"3-15-37": "SECC AEREO TY", "3-15-38": "SECC AEREO TY", "3-16-1
 // ===========================
 // BOTÓN ATRÁS DEL CELU
 // ===========================
+let navStack = ['home'];
+
 // Pushear estado inicial al cargar
 window.addEventListener('load', () => {
   history.pushState({ screen: 'home' }, '', '');
 });
 
 // Interceptar botón atrás del celu
-window.addEventListener('popstate', (e) => {
-  // Si hay pantalla activa distinta al home, volver
-  if (currentScreen && currentScreen !== 'home') {
-    goBack(currentScreen);
-    // Volver a pushear para que el botón atrás siga funcionando
+window.addEventListener('popstate', () => {
+  // Si el modal de protección está abierto → cerrarlo primero
+  const modalProt = document.getElementById('modal-proteccion');
+  if (modalProt && modalProt.style.display === 'flex') {
+    cerrarModalProteccion();
+    // Volver a pushear para que el siguiente atrás navegue la pantalla
     history.pushState({ screen: currentScreen }, '', '');
+    return;
+  }
+  // Si no hay modal abierto → navegar pantalla anterior
+  if (navStack.length > 1) {
+    navStack.pop();
+    const anterior = navStack[navStack.length - 1];
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + anterior)?.classList.add('active');
+    document.getElementById('bodyScroll').scrollTop = 0;
+    currentScreen = anterior;
+    if (navStack.length > 1) {
+      history.pushState({ screen: anterior }, '', '');
+    }
   }
 });
 
-// Pushear estado cada vez que se cambia de pantalla
+// Registrar cada cambio de pantalla en el stack
 const _showScreen = showScreen;
 showScreen = function(id) {
   _showScreen(id);
-  if (id !== 'home') {
-    history.pushState({ screen: id }, '', '');
+  if (id === 'home') {
+    navStack = ['home'];
+  } else {
+    // Evitar duplicados consecutivos
+    if (navStack[navStack.length - 1] !== id) {
+      navStack.push(id);
+    }
   }
+  history.pushState({ screen: id }, '', '');
 };
 
 // ===========================
