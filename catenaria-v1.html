@@ -628,27 +628,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
       <h2>⚡ Falla de Catenaria</h2>
     </div>
     <div style="padding:1rem">
-
-      <!-- Selector de puesto -->
-      <div style="margin-bottom:1rem">
-        <label style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:.5rem">Seleccioná el puesto</label>
-        <div id="prot-puestos" style="display:flex;flex-direction:column;gap:.5rem"></div>
-      </div>
-
-      <!-- Input km protección -->
-      <div id="prot-km-section" style="display:none;margin-bottom:1rem">
-        <label style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:.5rem">Kilometraje de la protección</label>
-        <div style="display:flex;gap:.5rem">
-          <input id="prot-km-input" type="number" step="0.001" min="0" placeholder="Ej: 3.450"
-            style="flex:1;padding:.75rem 1rem;border:1.5px solid var(--border);border-radius:12px;font-size:1rem;background:var(--surface);color:var(--text);outline:none"
-            oninput="calcularProteccion()">
-          <button onclick="limpiarProteccion()" style="background:var(--border);border:none;border-radius:12px;padding:.75rem 1rem;cursor:pointer;font-size:.9rem;color:var(--text-muted)">✕</button>
-        </div>
-        <p id="prot-km-hint" style="font-size:.75rem;color:var(--text-muted);margin:.4rem 0 0 .2rem"></p>
-      </div>
-
-      <!-- Resultado -->
-      <div id="prot-resultado"></div>
+      <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:.75rem">Seleccioná el puesto de protección</p>
+      <div id="prot-puestos" style="display:flex;flex-direction:column;gap:.5rem"></div>
     </div>
   </div>
 
@@ -2673,25 +2654,24 @@ function renderPuestosBtns() {
 
 function seleccionarPuesto(puesto, btnEl) {
   puestoProt = puesto;
-  // Resaltar seleccionado
-  document.querySelectorAll('#prot-puestos button').forEach(b => {
-    b.style.background = 'var(--surface)';
-    b.style.borderColor = 'var(--border)';
-  });
-  btnEl.style.background = 'var(--accent-light)';
-  btnEl.style.borderColor = 'var(--accent)';
-
-  // Mostrar input km
-  const sec = document.getElementById('prot-km-section');
-  sec.style.display = 'block';
-  const hint = document.getElementById('prot-km-hint');
-  hint.textContent = puesto.sentido === 'suma'
+  // Actualizar modal
+  document.getElementById('modal-prot-titulo').textContent = '⚡ ' + puesto.label;
+  document.getElementById('modal-prot-subtitulo').textContent = puesto.descripcion + ' — km base ' + puesto.km.toFixed(3);
+  document.getElementById('prot-km-hint').textContent = puesto.sentido === 'suma'
     ? 'km falla = ' + puesto.km.toFixed(3) + ' + km protección'
     : 'km falla = ' + puesto.km.toFixed(3) + ' − km protección';
-
   document.getElementById('prot-resultado').innerHTML = '';
   document.getElementById('prot-km-input').value = '';
-  document.getElementById('prot-km-input').focus();
+  // Abrir modal
+  const modal = document.getElementById('modal-proteccion');
+  modal.style.display = 'flex';
+  setTimeout(() => document.getElementById('prot-km-input').focus(), 100);
+}
+
+function cerrarModalProteccion() {
+  document.getElementById('modal-proteccion').style.display = 'none';
+  document.getElementById('prot-resultado').innerHTML = '';
+  document.getElementById('prot-km-input').value = '';
 }
 
 function limpiarProteccion() {
@@ -2962,5 +2942,39 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
+
+<!-- MODAL PROTECCIÓN IMPEDANCIA -->
+<div id="modal-proteccion" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,.55);z-index:8888;align-items:flex-end;justify-content:center">
+  <div style="background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;
+    padding:1.2rem 1rem 2rem;max-height:90vh;overflow-y:auto">
+
+    <!-- Header del modal -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
+      <div>
+        <h3 id="modal-prot-titulo" style="margin:0;font-size:1rem;color:var(--text)">⚡ Puesto</h3>
+        <p id="modal-prot-subtitulo" style="margin:.2rem 0 0;font-size:.75rem;color:var(--text-muted)"></p>
+      </div>
+      <button onclick="cerrarModalProteccion()" style="background:var(--surface2);border:1px solid var(--border);
+        border-radius:8px;padding:.3rem .7rem;font-size:1rem;cursor:pointer;color:var(--text)">✕</button>
+    </div>
+
+    <!-- Input km -->
+    <div style="margin-bottom:.75rem">
+      <label style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:.4rem">Kilometraje de la protección</label>
+      <div style="display:flex;gap:.5rem">
+        <input id="prot-km-input" type="number" step="0.001" min="0" placeholder="Ej: 3.450"
+          style="flex:1;padding:.75rem 1rem;border:1.5px solid var(--border);border-radius:12px;font-size:1rem;background:var(--surface);color:var(--text);outline:none;-webkit-appearance:none"
+          oninput="calcularProteccion()">
+        <button onclick="limpiarProteccion()" style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:.75rem 1rem;cursor:pointer;font-size:.9rem;color:var(--text-muted)">✕</button>
+      </div>
+      <p id="prot-km-hint" style="font-size:.75rem;color:var(--text-muted);margin:.4rem 0 0 .2rem"></p>
+    </div>
+
+    <!-- Resultado -->
+    <div id="prot-resultado"></div>
+  </div>
+</div>
+
 </body>
 </html>
