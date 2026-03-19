@@ -2112,7 +2112,7 @@ function showFallas() {
 function showFallasCatenaria() {
   const c = document.getElementById('fallas-content');
   c.innerHTML = `<div style="padding:.5rem 0 0">
-    <button onclick="showFallas()" style="background:none;border:none;color:var(--accent);font-size:.85rem;padding:.5rem 1rem;cursor:pointer">‹ Volver</button>
+
     ${FALLAS_CONTENT}
   </div>`;
 }
@@ -2120,7 +2120,7 @@ function showFallasCatenaria() {
 function showFallasDistribucion() {
   const c = document.getElementById('fallas-content');
   c.innerHTML = `<div style="padding:.5rem 0 0">
-    <button onclick="showFallas()" style="background:none;border:none;color:var(--accent);font-size:.85rem;padding:.5rem 1rem;cursor:pointer">‹ Volver</button>
+
     <div style="padding:1rem">
       <div class="falla-node falla-start">🔌 Falla en Sistema de Distribución</div>
       <div class="falla-arrow">▼</div>
@@ -2164,7 +2164,7 @@ let prevScreen = 'home';
 
 function goBack(from) {
   if (from === 'buscador' || from === 'proteccion') {
-    showScreen(prevScreen);
+    navegarA(prevScreen);
   } else {
     navegarA('home');
   }
@@ -2217,7 +2217,7 @@ function closeSearchIfOutside(e) {
 
 function doSearch(q) {
   if (!q.trim()) {
-    showScreen(currentScreen === 'search' ? 'home' : currentScreen);
+    navegarA(currentScreen === 'search' ? 'home' : currentScreen);
     return;
   }
   const results = TASKS.filter(t =>
@@ -2597,53 +2597,17 @@ const PIQ_OBS = {"3-15-37": "SECC AEREO TY", "3-15-38": "SECC AEREO TY", "3-16-1
 let navStack = ['home'];
 let handlingBack = false;
 
-// Al cargar: pushear dos estados — uno base para poder salir, uno para la app
+// Al cargar: estado exit (base) + estado home
 window.addEventListener('load', () => {
   history.replaceState({ screen: 'exit' }, '', '');
   history.pushState({ screen: 'home' }, '', '');
 });
 
-// Interceptar botón atrás del celu
-window.addEventListener('popstate', (e) => {
-  if (handlingBack) return;
-  handlingBack = true;
-  setTimeout(() => { handlingBack = false; }, 300);
-
-  // Si el modal de protección está abierto → cerrarlo primero
-  const modalProt = document.getElementById('modal-proteccion');
-  if (modalProt && modalProt.style.display === 'flex') {
-    cerrarModalProteccion();
-    history.pushState({ screen: currentScreen }, '', '');
-    return;
-  }
-
-  // Si llegamos al estado base 'exit' → salir de la app
-  if (e.state && e.state.screen === 'exit') {
-    return; // dejar salir
-  }
-
-  // Si estamos en home → dejar salir
-  if (currentScreen === 'home' || navStack.length <= 1) {
-    history.back(); // ir al estado 'exit'
-    return;
-  }
-
-  // Navegar a pantalla anterior
-  navStack.pop();
-  const anterior = navStack[navStack.length - 1];
-  showScreen(anterior);
-  currentScreen = anterior;
-
-  // Pushear para mantener historia
-  history.pushState({ screen: anterior }, '', '');
-});
-
-// Registrar cada cambio de pantalla en el stack
+// navegarA: única función para cambiar pantalla Y registrar en stack/historia
 function navegarA(id) {
-  showScreen(id);
+  showScreen(id); // solo cambia visual
   if (id === 'home') {
     navStack = ['home'];
-    // Reconstruir historia: estado exit + estado home
     history.replaceState({ screen: 'exit' }, '', '');
     history.pushState({ screen: 'home' }, '', '');
   } else {
@@ -2653,6 +2617,39 @@ function navegarA(id) {
     history.pushState({ screen: id }, '', '');
   }
 }
+
+// Interceptar botón atrás del celu
+window.addEventListener('popstate', (e) => {
+  if (handlingBack) return;
+  handlingBack = true;
+  setTimeout(() => { handlingBack = false; }, 300);
+
+  // Modal protección abierto → cerrarlo
+  const modalProt = document.getElementById('modal-proteccion');
+  if (modalProt && modalProt.style.display === 'flex') {
+    cerrarModalProteccion();
+    history.pushState({ screen: currentScreen }, '', '');
+    return;
+  }
+
+  // Estado exit → salir de la app
+  if (e.state && e.state.screen === 'exit') {
+    return;
+  }
+
+  // En home → ir a exit para salir
+  if (currentScreen === 'home' || navStack.length <= 1) {
+    history.back();
+    return;
+  }
+
+  // Navegar a pantalla anterior
+  navStack.pop();
+  const anterior = navStack[navStack.length - 1];
+  showScreen(anterior); // solo visual, sin pushear
+  currentScreen = anterior;
+  history.pushState({ screen: anterior }, '', '');
+});
 
 // ===========================
 // PROTECCIÓN DE IMPEDANCIA
