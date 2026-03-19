@@ -2596,52 +2596,50 @@ const PIQ_OBS = {"3-15-37": "SECC AEREO TY", "3-15-38": "SECC AEREO TY", "3-16-1
 // ===========================
 let navStack = ['home'];
 
+// Al cargar pushear un estado para interceptar el atrás
 window.addEventListener('load', () => {
-  // Pushear un estado extra para interceptar el primer atrás
   history.pushState(null, '', window.location.href);
 });
 
+// Interceptar botón atrás
 window.addEventListener('popstate', () => {
-  // Siempre re-pushear para evitar que el navegador salga
+  // Siempre re-pushear para que el navegador nunca salga
   history.pushState(null, '', window.location.href);
 
-  // Si hay modal abierto → cerrarlo
-  const modalProt = document.getElementById('modal-proteccion');
-  if (modalProt && modalProt.style.display === 'flex') {
+  // Modal protección abierto → cerrarlo
+  const modal = document.getElementById('modal-proteccion');
+  if (modal && modal.style.display === 'flex') {
     cerrarModalProteccion();
     return;
   }
 
-  // Si estamos en home → minimizar (no hacer nada, el pushState ya evita salir)
-  if (currentScreen === 'home') {
-    return;
-  }
-
-  // Navegar a pantalla anterior
+  // Obtener pantalla anterior del stack
   if (navStack.length > 1) {
     navStack.pop();
-    const anterior = navStack[navStack.length - 1];
-    // Algunas pantallas necesitan re-renderizar su contenido
-    if (anterior === 'fallas') {
-      showFallas();
-    } else if (anterior === 'home') {
-      showScreen('home');
-      currentScreen = 'home';
-      navStack = ['home'];
-    } else {
-      showScreen(anterior);
-      currentScreen = anterior;
-    }
-  } else {
-    showScreen('home');
-    currentScreen = 'home';
-    navStack = ['home'];
   }
+  const destino = navStack[navStack.length - 1] || 'home';
+
+  // Ir a la pantalla destino
+  irA(destino);
 });
 
-// Registrar navegación en el stack
+// irA: navega visualmente sin modificar el stack
+function irA(id) {
+  if (id === 'fallas') {
+    // Fallas necesita re-renderizar contenido
+    const c = document.getElementById('fallas-content');
+    if (c && !c.innerHTML.trim()) showFallas();
+    else showScreen('fallas');
+  } else if (id === 'home') {
+    showScreen('home');
+    navStack = ['home'];
+  } else {
+    showScreen(id);
+  }
+}
+
+// navegarA: cambia pantalla Y registra en stack
 function navegarA(id) {
-  showScreen(id);
   if (id === 'home') {
     navStack = ['home'];
   } else {
@@ -2649,6 +2647,7 @@ function navegarA(id) {
       navStack.push(id);
     }
   }
+  showScreen(id);
 }
 
 // ===========================
