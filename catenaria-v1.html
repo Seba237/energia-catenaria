@@ -2068,7 +2068,7 @@ function exportMaterials() {
 }
 
 function goBackFromMaterials() {
-  showScreen('home');
+  navegarA('home');
 }
 
 function showFallas() {
@@ -2166,7 +2166,7 @@ function goBack(from) {
   if (from === 'buscador' || from === 'proteccion') {
     showScreen(prevScreen);
   } else {
-    showScreen('home');
+    navegarA('home');
   }
 }
 
@@ -2176,14 +2176,14 @@ function goBack(from) {
 // BACK
 // ===========================
 function goBackFromInfoDoc() {
-  showScreen('home');
+  navegarA('home');
   currentCategory = null;
 }
 
 function goBack() {
   if (currentCategory) {
-    showScreen('home');  } else {
-    showScreen('home');
+    navegarA('home');  } else {
+    navegarA('home');
   }
   currentCategory = null;
 }
@@ -2192,7 +2192,7 @@ function goBackFromDetail() {
   if (previousScreen === 'category') {
     navegarA('category');
   } else {
-    showScreen('home');  }
+    navegarA('home');  }
   currentTask = null;
 }
 
@@ -2643,12 +2643,15 @@ function navegarA(id) {
   showScreen(id);
   if (id === 'home') {
     navStack = ['home'];
+    // Reconstruir historia: estado exit + estado home
+    history.replaceState({ screen: 'exit' }, '', '');
+    history.pushState({ screen: 'home' }, '', '');
   } else {
     if (navStack[navStack.length - 1] !== id) {
       navStack.push(id);
     }
+    history.pushState({ screen: id }, '', '');
   }
-  history.pushState({ screen: id }, '', '');
 }
 
 // ===========================
