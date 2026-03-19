@@ -596,6 +596,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
   <!-- FALLAS SCREEN -->
   <div class="screen" id="screen-fallas">
     <div class="screen-header">
+      <button class="back-btn" onclick="goBack('fallas')">‹</button>
       <h2>⚡ Fallas en Catenaria y Distribución</h2>
     </div>
     <div id="fallas-content"></div>
@@ -605,6 +606,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
   <!-- BUSCADOR SCREEN -->
   <div class="screen" id="screen-buscador">
     <div class="screen-header">
+      <button class="back-btn" onclick="goBack('buscador')">‹</button>
       <h2>🔍 Buscar Piquete / Km</h2>
     </div>
     <div style="padding:1rem">
@@ -622,6 +624,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
   <!-- PROTECCIÓN IMPEDANCIA SCREEN -->
   <div class="screen" id="screen-proteccion">
     <div class="screen-header">
+      <button class="back-btn" onclick="goBack('proteccion')">‹</button>
       <h2>⚡ Falla de Catenaria</h2>
     </div>
     <div style="padding:1rem">
@@ -633,6 +636,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
   <!-- PLANIMETRÍA SCREEN -->
   <div class="screen" id="screen-planimetria">
     <div class="screen-header">
+      <button class="back-btn" onclick="goBack('planimetria')">‹</button>
       <h2>🗺️ Planimetría</h2>
     </div>
     <div id="plan-list" style="padding:2rem 1rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;text-align:center">
@@ -663,6 +667,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
   <!-- MATERIALS SCREEN -->
   <div class="screen" id="screen-materials">
     <div class="screen-header">
+      <button class="back-btn" onclick="goBackFromMaterials()">‹</button>
       <h2 style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📦 Materiales</h2>
     </div>
     <div id="materials-content"></div>
@@ -671,6 +676,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
   <!-- INFO DOC (guías informativas) -->
   <div class="screen" id="screen-infodoc">
     <div class="screen-header">
+      <button class="back-btn" onclick="goBackFromInfoDoc()">‹</button>
       <h2 id="info-doc-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></h2>
     </div>
     <div id="info-doc-content"></div>
@@ -679,6 +685,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
   <!-- CATEGORY LIST -->
   <div class="screen" id="screen-category">
     <div class="screen-header">
+      <button class="back-btn" onclick="goBack()">‹</button>
       <h2 id="cat-title">Categoría</h2>
     </div>
     <div id="cat-task-list"></div>
@@ -687,6 +694,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
   <!-- TASK DETAIL -->
   <div class="screen" id="screen-detail">
     <div class="screen-header">
+      <button class="back-btn" onclick="goBackFromDetail()">‹</button>
       <h2 id="detail-nav-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></h2>
     </div>
     <div id="detail-content"></div>
@@ -2626,15 +2634,6 @@ window.addEventListener('popstate', () => {
 
 // irA: navega visualmente sin modificar el stack
 
-function dbg(msg) {
-  const el = document.getElementById('debug-log');
-  if (el) {
-    const line = document.createElement('div');
-    line.textContent = new Date().toLocaleTimeString() + ' ' + msg;
-    el.insertBefore(line, el.firstChild);
-    if (el.children.length > 15) el.removeChild(el.lastChild);
-  }
-}
 
 function irA(id) {
   if (id === 'fallas') {
@@ -3016,9 +3015,6 @@ if ('serviceWorker' in navigator) {
 </div>
 
 
-<!-- DEBUG PANEL -->
-<div id="debug-panel" style="position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,.85);color:#0f0;font-family:monospace;font-size:.7rem;padding:.4rem .6rem;z-index:99999;max-height:120px;overflow-y:auto">
-  <div id="debug-log">Debug activo...</div>
 </div>
 </body>
 </html>
