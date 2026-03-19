@@ -2940,10 +2940,25 @@ function mostrarResultado(piqId, data, container) {
 
 <script>
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js')
-      .then(r => console.log('SW registrado'))
-      .catch(e => console.log('SW error:', e));
+  window.addEventListener('load', async () => {
+    try {
+      const reg = await navigator.serviceWorker.register('sw.js');
+      // Verificar actualizaciones cada vez que se abre la app
+      reg.addEventListener('updatefound', () => {
+        const newSW = reg.installing;
+        newSW.addEventListener('statechange', () => {
+          if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+            // Hay versión nueva — recargar automáticamente
+            newSW.postMessage('skipWaiting');
+            window.location.reload();
+          }
+        });
+      });
+      // Forzar chequeo de actualización
+      reg.update();
+    } catch(e) {
+      console.log('SW error:', e);
+    }
   });
 }
 </script>
