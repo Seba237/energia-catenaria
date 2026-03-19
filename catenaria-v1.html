@@ -2611,7 +2611,6 @@ window.addEventListener('load', () => {
 
 // Interceptar botón atrás
 window.addEventListener('popstate', () => {
-  dbg('POPSTATE | screen=' + currentScreen + ' | stack=' + JSON.stringify(navStack));
   // Siempre re-pushear para que el navegador nunca salga
   history.pushState(null, '', window.location.href);
 
@@ -2650,7 +2649,6 @@ function irA(id) {
 
 // navegarA: cambia pantalla Y registra en stack
 function navegarA(id) {
-  dbg('navegarA(' + id + ') | antes stack=' + JSON.stringify(navStack));
   if (id === 'home') {
     navStack = ['home'];
   } else {
