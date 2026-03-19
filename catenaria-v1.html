@@ -540,7 +540,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
   </div>
   <div class="header-text">
     <h1><span class="app-badge">APP</span>Energía · Catenaria</h1>
-    <span>Línea Roca</span>
+    <span>Línea Roca · <span id="user-email" style="font-weight:600"></span></span>
   </div>
   <button class="header-search-btn" onclick="toggleSearch()">
     <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -2621,6 +2621,9 @@ window.addEventListener('popstate', () => {
     return;
   }
 
+  // Si estamos en home → no hacer nada
+  if (currentScreen === 'home') return;
+
   // Obtener pantalla anterior del stack
   if (navStack.length > 1) {
     navStack.pop();
@@ -2635,9 +2638,17 @@ window.addEventListener('popstate', () => {
 
 
 function irA(id) {
+  // irA solo cambia la pantalla visualmente, sin tocar el navStack
   if (id === 'fallas') {
-    // Siempre re-renderizar fallas al volver
-    showFallas();
+    // Re-renderizar contenido de fallas sin modificar stack
+    showScreen('fallas');
+    const c = document.getElementById('fallas-content');
+    if (c) {
+      // Re-usar el innerHTML builder de showFallas pero sin push al stack
+      const tempStack = navStack.slice();
+      showFallas();
+      navStack = tempStack; // restaurar stack original
+    }
     return;
   } else if (id === 'home') {
     showScreen('home');
