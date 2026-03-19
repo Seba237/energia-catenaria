@@ -2604,21 +2604,24 @@ window.addEventListener('popstate', () => {
   const modalProt = document.getElementById('modal-proteccion');
   if (modalProt && modalProt.style.display === 'flex') {
     cerrarModalProteccion();
-    // Volver a pushear para que el siguiente atrás navegue la pantalla
     history.pushState({ screen: currentScreen }, '', '');
     return;
   }
-  // Si no hay modal abierto → navegar pantalla anterior
-  if (navStack.length > 1) {
-    navStack.pop();
-    const anterior = navStack[navStack.length - 1];
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById('screen-' + anterior)?.classList.add('active');
-    document.getElementById('bodyScroll').scrollTop = 0;
-    currentScreen = anterior;
-    if (navStack.length > 1) {
-      history.pushState({ screen: anterior }, '', '');
-    }
+  // Si ya estás en Home → salir de la app
+  if (navStack.length <= 1 || currentScreen === 'home') {
+    // No pushear — dejar que el navegador salga
+    return;
+  }
+  // Si hay pantallas anteriores → navegar atrás
+  navStack.pop();
+  const anterior = navStack[navStack.length - 1];
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + anterior)?.classList.add('active');
+  document.getElementById('bodyScroll').scrollTop = 0;
+  currentScreen = anterior;
+  // Mantener estado solo si no llegamos al home
+  if (anterior !== 'home') {
+    history.pushState({ screen: anterior }, '', '');
   }
 });
 
