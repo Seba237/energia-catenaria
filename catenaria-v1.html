@@ -478,11 +478,55 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('app-root').style.display     = 'flex';
       document.getElementById('user-email').textContent     = user.email.replace('@energiacatenaria.app','');
+      registrarEvento('login');
     } else {
       document.getElementById('login-screen').style.display = 'flex';
       document.getElementById('app-root').style.display     = 'none';
     }
   });
+
+  // ===========================
+  // ANALYTICS
+  // ===========================
+  async function registrarEvento(tipo, detalle = {}) {
+    const user = auth.currentUser;
+    if (!user) return;
+    try {
+      const ref = doc(db, 'analytics', user.uid);
+      const snap = await getDoc(ref);
+      const data = snap.exists() ? snap.data() : {
+        email: user.email.replace('@energiacatenaria.app',''),
+        accesos: 0,
+        pantallas: {},
+        busquedas: 0,
+        fallasCatenaria: 0,
+        tareasVistas: {},
+        ultimoAcceso: null,
+      };
+
+      if (tipo === 'login') {
+        data.accesos = (data.accesos || 0) + 1;
+        data.ultimoAcceso = new Date().toISOString();
+      } else if (tipo === 'pantalla') {
+        const p = detalle.nombre || 'desconocida';
+        data.pantallas[p] = (data.pantallas[p] || 0) + 1;
+      } else if (tipo === 'busqueda') {
+        data.busquedas = (data.busquedas || 0) + 1;
+      } else if (tipo === 'falla_catenaria') {
+        data.fallasCatenaria = (data.fallasCatenaria || 0) + 1;
+      } else if (tipo === 'tarea') {
+        const t = detalle.nombre || 'desconocida';
+        data.tareasVistas[t] = (data.tareasVistas[t] || 0) + 1;
+      }
+
+      await setDoc(ref, data);
+    } catch(e) {
+      console.log('Analytics error:', e);
+    }
+  }
+
+  // Exponer para uso en el resto de la app
+  window._analytics = registrarEvento;
 
   function mostrarErrorLogin(msg) {
     document.getElementById('login-screen').style.display = 'flex';
@@ -2035,6 +2079,7 @@ function showPanel(btn, panelId) {
 // MATERIALS
 // ===========================
 function showMaterials() {
+  if(window._analytics) window._analytics('pantalla',{nombre:'Materiales'});
   navegarA('materials');
   const matMap = {};
   TASKS.forEach(t => {
@@ -2160,6 +2205,7 @@ function renderFallasContent() {
 }
 
 function showFallas() {
+  if(window._analytics) window._analytics('pantalla',{nombre:'Fallas'});
   showScreen('fallas');
   if (navStack[navStack.length-1] !== 'fallas') navStack.push('fallas');
   renderFallasContent();
@@ -2213,6 +2259,7 @@ function showFallaStep(id) {
 }
 
 function showPlanimetria() {
+  if(window._analytics) window._analytics('pantalla',{nombre:'Planimetría'});
   navegarA('planimetria');
 }
 
@@ -2442,6 +2489,7 @@ const PIQUETES_DB = {"1-0-5":{"km":0.14,"via_num":3,"via":"Ascendente interior",
 const ESTACIONES_DB = [{"nombre":"Plaza Constitución","km":0.0,"lat":-34.6265,"lng":-58.3797},{"nombre":"Brasil","km":0.7,"lat":-34.6282,"lng":-58.3857},{"nombre":"San Martín","km":1.35,"lat":-34.6321,"lng":-58.3917},{"nombre":"Hipólito Yrigoyen","km":2.84,"lat":-34.643,"lng":-58.4025},{"nombre":"Avellaneda","km":3.835,"lat":-34.6615,"lng":-58.3658},{"nombre":"Gerli","km":6.48,"lat":-34.6838,"lng":-58.368},{"nombre":"Lanús","km":9.03,"lat":-34.7006,"lng":-58.3899},{"nombre":"Remedios de Escalada","km":11.212,"lat":-34.7186,"lng":-58.4},{"nombre":"Banfield","km":13.004,"lat":-34.7319,"lng":-58.398},{"nombre":"Lomas de Zamora","km":14.905,"lat":-34.7591,"lng":-58.4005},{"nombre":"Temperley","km":16.802,"lat":-34.7766,"lng":-58.399},{"nombre":"Turdera","km":19.0,"lat":-34.796,"lng":-58.4128},{"nombre":"Llavallol","km":20.5,"lat":-34.808,"lng":-58.4195},{"nombre":"Luis Guillón","km":22.3,"lat":-34.823,"lng":-58.4282},{"nombre":"Monte Grande","km":24.5,"lat":-34.8218,"lng":-58.4607},{"nombre":"El Jagüel","km":26.7,"lat":-34.83,"lng":-58.482},{"nombre":"Ezeiza","km":29.5,"lat":-34.8503,"lng":-58.512},{"nombre":"Adrogue","km":19.177,"lat":-34.7989,"lng":-58.3931},{"nombre":"Burzaco","km":22.244,"lat":-34.8254,"lng":-58.3877},{"nombre":"Longchamps","km":25.031,"lat":-34.8612,"lng":-58.3824},{"nombre":"Glew","km":32.474,"lat":-34.8965,"lng":-58.3836},{"nombre":"Guernica","km":35.376,"lat":-34.9215,"lng":-58.3742},{"nombre":"Alejandro Korn","km":38.5,"lat":-34.9525,"lng":-58.3695},{"nombre":"Mármol","km":19.0,"lat":-34.8155,"lng":-58.3545},{"nombre":"Calzada","km":21.0,"lat":-34.829,"lng":-58.348},{"nombre":"Claypole","km":23.0,"lat":-34.846,"lng":-58.34},{"nombre":"Ardigo","km":25.0,"lat":-34.862,"lng":-58.332},{"nombre":"Florencio Varela","km":27.0,"lat":-34.808,"lng":-58.2757},{"nombre":"Zeballos","km":29.0,"lat":-34.8245,"lng":-58.264},{"nombre":"Bosques","km":31.0,"lat":-34.841,"lng":-58.2495},{"nombre":"Berazategui","km":23.603,"lat":-34.7633,"lng":-58.2118},{"nombre":"Villa España","km":25.5,"lat":-34.78,"lng":-58.198},{"nombre":"Ranelagh","km":27.3,"lat":-34.798,"lng":-58.183},{"nombre":"Sourigues","km":29.1,"lat":-34.814,"lng":-58.168},{"nombre":"Sarandí","km":7.465,"lat":-34.6862,"lng":-58.3445},{"nombre":"Villa Dominico","km":9.775,"lat":-34.7025,"lng":-58.3263},{"nombre":"Wilde","km":11.178,"lat":-34.7154,"lng":-58.3156},{"nombre":"Don Bosco","km":12.73,"lat":-34.729,"lng":-58.298},{"nombre":"Bernal","km":14.335,"lat":-34.7033,"lng":-58.2791},{"nombre":"Quilmes","km":16.89,"lat":-34.7215,"lng":-58.2566},{"nombre":"Quilmes Sur","km":19.196,"lat":-34.7372,"lng":-58.2383},{"nombre":"Ezpeleta","km":20.808,"lat":-34.7508,"lng":-58.2218},{"nombre":"Plátanos","km":27.545,"lat":-34.809,"lng":-58.159},{"nombre":"Hudson","km":29.322,"lat":-34.825,"lng":-58.142},{"nombre":"Pereyra","km":36.824,"lat":-34.889,"lng":-58.089},{"nombre":"Villa Elisa","km":39.116,"lat":-34.876,"lng":-58.088},{"nombre":"City Bell","km":42.629,"lat":-34.8713,"lng":-58.0545},{"nombre":"Gonnet","km":45.885,"lat":-34.878,"lng":-58.0225},{"nombre":"Ringuelet","km":47.331,"lat":-34.9009,"lng":-57.9985},{"nombre":"Tolosa","km":50.317,"lat":-34.9099,"lng":-57.9755},{"nombre":"La Plata","km":52.664,"lat":-34.9214,"lng":-57.9545}];
 
 function showBuscador(from) {
+  if(window._analytics) window._analytics('pantalla',{nombre:'Buscador Piquete'});
   prevScreen = from || currentScreen || 'home';
   navegarA('buscador');
   document.getElementById('buscador-input').value = '';
@@ -2716,6 +2764,7 @@ function navegarA(id) {
 let puestoProt = null;
 
 function showProteccion() {
+  if(window._analytics) window._analytics('pantalla',{nombre:'Falla Catenaria'});
   prevScreen = currentScreen || 'fallas';
   navegarA('proteccion');
   puestoProt = null;
@@ -2793,6 +2842,7 @@ function calcularProteccion() {
   const [piqId, piqData] = nearest;
 
   // Mostrar resultado usando mostrarResultado
+  if(window._analytics) window._analytics('falla_catenaria');
   res.innerHTML = '<div style="background:var(--warn-bg);border-left:4px solid var(--warn);border-radius:10px;padding:.65rem .9rem;margin-bottom:.75rem;font-size:.85rem;font-weight:600;color:var(--warn)">⚡ Km protección: ' + val.toFixed(3) + ' — Km falla estimado: <b>' + kmFalla.toFixed(3) + '</b></div>';
   const container = document.createElement('div');
   res.appendChild(container);
@@ -2815,7 +2865,7 @@ function buscarPiquete(val) {
 
   // Búsqueda exacta
   let found = PIQ_DB[val];
-  if (found) { mostrarResultado(val, found, res); return; }
+  if (found) { mostrarResultado(val, found, res); if(window._analytics) window._analytics('busqueda'); return; }
 
   // Búsqueda por km
   const kmVal = parseFloat(val.replace(',','.'));
