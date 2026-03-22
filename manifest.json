@@ -1,6 +1,6 @@
 {
   "name": "Energía - Catenaria",
-  "short_name": "E-Catenaria",
+  "short_name": "Catenaria",
   "description": "App de gestión de Catenaria — Línea Roca",
   "start_url": "./catenaria-v1.html",
   "display": "standalone",
