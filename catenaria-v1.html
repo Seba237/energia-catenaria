@@ -424,9 +424,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 
 <!-- FIREBASE -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { initializeApp }                                from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, doc, setDoc, getDoc, deleteDoc, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey:            "AIzaSyBzTf_SYEqYAxTZUi4ivNgWJp24sE1b7YQ",
@@ -440,18 +442,53 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 
   const app  = initializeApp(firebaseConfig);
   const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  // Generar ID único para este dispositivo/sesión
+  function getDeviceId() {
+    let id = localStorage.getItem('deviceId');
+    if (!id) {
+      id = 'dev_' + Math.random().toString(36).substr(2,12) + '_' + Date.now();
+      localStorage.setItem('deviceId', id);
+    }
+    return id;
+  }
 
   // Escuchar estado de sesión
-  onAuthStateChanged(auth, user => {
+  onAuthStateChanged(auth, async user => {
     if (user) {
+      const deviceId = getDeviceId();
+      const sesRef   = doc(db, 'sesiones', user.uid);
+      const sesSnap  = await getDoc(sesRef);
+
+      if (sesSnap.exists() && sesSnap.data().deviceId !== deviceId) {
+        // Hay otra sesión activa en otro dispositivo → cerrar esta
+        await signOut(auth);
+        mostrarErrorLogin('⚠️ Tu usuario ya está activo en otro dispositivo. Cerrá esa sesión primero.');
+        return;
+      }
+
+      // Registrar esta sesión
+      await setDoc(sesRef, {
+        deviceId,
+        email:     user.email,
+        loginAt:   serverTimestamp(),
+      });
+
       document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('app-root').style.display    = 'flex';
-      document.getElementById('user-email').textContent    = user.email.replace('@energiacatenaria.app','');
+      document.getElementById('app-root').style.display     = 'flex';
+      document.getElementById('user-email').textContent     = user.email.replace('@energiacatenaria.app','');
     } else {
       document.getElementById('login-screen').style.display = 'flex';
-      document.getElementById('app-root').style.display    = 'none';
+      document.getElementById('app-root').style.display     = 'none';
     }
   });
+
+  function mostrarErrorLogin(msg) {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app-root').style.display     = 'none';
+    document.getElementById('login-error').textContent    = msg;
+  }
 
   // Dominio interno para convertir usuario → email ficticio
   const DOMINIO = '@energiacatenaria.app';
@@ -484,8 +521,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
     }
   };
 
-  // Logout
+  // Logout — cierra sesión y libera el dispositivo en Firestore
   window.doLogout = async () => {
+    const user = auth.currentUser;
+    if (user) {
+      const sesRef = doc(db, 'sesiones', user.uid);
+      await deleteDoc(sesRef);
+    }
     await signOut(auth);
   };
 
