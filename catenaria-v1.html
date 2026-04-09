@@ -700,7 +700,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
         Ingresar
       </button>
     </div>
-    <p style="text-align:center;color:rgba(255,255,255,.35);font-size:.72rem;margin-top:1.5rem">v2.6 · Desarrollado por Sebastián Pérez</p>
+    <p style="text-align:center;color:rgba(255,255,255,.35);font-size:.72rem;margin-top:1.5rem">v3.1 · Desarrollado por Sebastián Pérez</p>
   </div>
 </div>
 
@@ -792,10 +792,23 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
       <h2>🔍 Buscar Piquete / Km</h2>
     </div>
     <div style="padding:1rem">
+      <!-- Selector de modo -->
+      <div style="display:flex;gap:.5rem;margin-bottom:.75rem">
+        <button id="modo-piquete-btn" onclick="setBuscadorModo('piquete')"
+          style="flex:1;padding:.6rem;border-radius:10px;border:2px solid var(--accent);background:var(--accent);color:#fff;font-size:.9rem;font-weight:600;cursor:pointer">
+          # Piquete
+        </button>
+        <button id="modo-km-btn" onclick="setBuscadorModo('km')"
+          style="flex:1;padding:.6rem;border-radius:10px;border:2px solid var(--border);background:var(--card-bg);color:var(--text-muted);font-size:.9rem;font-weight:600;cursor:pointer">
+          📍 Km
+        </button>
+      </div>
+      <!-- Input -->
       <div style="display:flex;gap:.5rem;margin-bottom:1rem">
-        <input id="buscador-input" type="text" placeholder="Ej: 5-18-16  ó  27.450"
+        <input id="buscador-input" type="text" placeholder="Ej: 5-18-16"
           style="flex:1;padding:.75rem 1rem;border:1.5px solid var(--border);border-radius:12px;font-size:1rem;background:var(--card-bg);color:var(--text-primary);outline:none"
-          oninput="buscarPiquete(this.value)" autocomplete="off" autocorrect="off" spellcheck="false">
+          oninput="clearTimeout(window._bqt);window._bqt=setTimeout(buscarPiquete,80)" onchange="buscarPiquete()" autocomplete="off" autocorrect="off" spellcheck="false"
+          inputmode="text">
         <button onclick="limpiarBuscador()" style="background:var(--border);border:none;border-radius:12px;padding:.75rem 1rem;cursor:pointer;font-size:.9rem;color:var(--text-muted)">✕</button>
       </div>
       <div id="buscador-resultado"></div>
@@ -2599,72 +2612,159 @@ function closeBuscador() {
   document.getElementById('modal-buscador').style.display = 'none';
 }
 
+var buscadorModo = 'piquete';
+
+function setBuscadorModo(modo) {
+  buscadorModo = modo;
+  var btnPiquete = document.getElementById('modo-piquete-btn');
+  var btnKm = document.getElementById('modo-km-btn');
+  var input = document.getElementById('buscador-input');
+  var res = document.getElementById('buscador-resultado');
+  document.getElementById('buscador-sugerencias').innerHTML = '';
+  res.innerHTML = '';
+  input.value = '';
+  if (modo === 'piquete') {
+    btnPiquete.style.background = 'var(--accent)';
+    btnPiquete.style.borderColor = 'var(--accent)';
+    btnPiquete.style.color = '#fff';
+    btnKm.style.background = 'var(--card-bg)';
+    btnKm.style.borderColor = 'var(--border)';
+    btnKm.style.color = 'var(--text-muted)';
+    input.placeholder = 'Ej: 5-18-16';
+    input.setAttribute('inputmode', 'text');
+  } else {
+    btnKm.style.background = 'var(--accent)';
+    btnKm.style.borderColor = 'var(--accent)';
+    btnKm.style.color = '#fff';
+    btnPiquete.style.background = 'var(--card-bg)';
+    btnPiquete.style.borderColor = 'var(--border)';
+    btnPiquete.style.color = 'var(--text-muted)';
+    input.placeholder = 'Ej: 5 o 27.450';
+    input.setAttribute('inputmode', 'decimal');
+  }
+  input.focus();
+}
+
 function buscarPiquete() {
-  const q = document.getElementById('buscador-input').value.trim();
-  const res = document.getElementById('buscador-resultado');
+  var q = document.getElementById('buscador-input').value.trim();
+  var res = document.getElementById('buscador-resultado');
+  document.getElementById('buscador-sugerencias').innerHTML = '';
   if (!q) { res.innerHTML = ''; return; }
 
-  // Buscar por piquete exacto o por km
-  let found = null;
-  let searchType = 'piquete';
+  var found = null;
 
-  // ¿Es búsqueda por km? (número con punto o coma)
-  if (/^\d+[.,]?\d*$/.test(q.replace(',','.'))) {
-    searchType = 'km';
-    const km = parseFloat(q.replace(',','.'));
-    // Buscar el piquete más cercano al km dado
-    let minDiff = Infinity;
-    for (const [id, data] of Object.entries(PIQUETES_DB)) {
-      const diff = Math.abs(data.km - km);
-      if (diff < minDiff) {
-        minDiff = diff;
-        found = {id, ...data};
+  if (buscadorModo === 'km') {
+    // --- MODO KM ---
+    // Normalizar: "9", "9,0", "9.0", "9," => todos equivalen a km 9
+    var qNorm = q.replace(',','.').replace(/[^0-9.]/g,'');
+    // Eliminar puntos decimales múltiples (quedarse con el primero)
+    var partes = qNorm.split('.');
+    if (partes.length > 2) qNorm = partes[0] + '.' + partes.slice(1).join('');
+    var km = parseFloat(qNorm);
+    if (isNaN(km) || qNorm === '' || qNorm === '.') {
+      res.innerHTML = '';
+      return;
+    }
+
+    // Por cada tramo: buscar el piquete con km >= buscado más cercano (hacia adelante).
+    // Si no hay ninguno hacia adelante, usar el más cercano en cualquier dirección.
+    var mejorPorTramo = {};
+    var keys = Object.keys(PIQUETES_DB);
+    for (var i = 0; i < keys.length; i++) {
+      var id = keys[i];
+      var data = PIQUETES_DB[id];
+      var t = data.tramo || 'Sin tramo';
+      var diff = data.km - km;
+      var absDiff = Math.abs(diff);
+      var piq = {id: id, km: data.km, via: data.via, via_num: data.via_num, sistema: data.sistema, tramo: data.tramo, vias: data.vias, especial: data.especial};
+
+      if (!mejorPorTramo[t]) {
+        mejorPorTramo[t] = { diff: diff, absDiff: absDiff, piquete: piq };
+      } else {
+        var cur = mejorPorTramo[t];
+        var curAdelante = cur.diff >= 0;
+        var esteAdelante = diff >= 0;
+        if (esteAdelante && !curAdelante) {
+          mejorPorTramo[t] = { diff: diff, absDiff: absDiff, piquete: piq };
+        } else if (esteAdelante && curAdelante && absDiff < cur.absDiff) {
+          mejorPorTramo[t] = { diff: diff, absDiff: absDiff, piquete: piq };
+        } else if (!esteAdelante && !curAdelante && absDiff < cur.absDiff) {
+          mejorPorTramo[t] = { diff: diff, absDiff: absDiff, piquete: piq };
+        }
       }
     }
+
+    var tramos = Object.keys(mejorPorTramo).sort();
+    if (tramos.length === 0) {
+      res.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--text-muted)"><div style="font-size:2rem">🔍</div><p>No se encontraron piquetes cercanos al km <b>' + q + '</b></p></div>';
+      return;
+    } else if (tramos.length === 1) {
+      found = mejorPorTramo[tramos[0]].piquete;
+    } else {
+      var tramosHtml = '';
+      for (var ti = 0; ti < tramos.length; ti++) {
+        var tName = tramos[ti];
+        var p = mejorPorTramo[tName].piquete;
+        var label = tName === '1 y 3' ? 'Tramo 1 y 3' : 'Tramo ' + tName;
+        tramosHtml += '<button onclick="seleccionarPiquete(\'' + p.id.replace(/'/g,"\'") + '\')" style="display:block;width:100%;text-align:left;padding:.6rem .8rem;margin-bottom:.4rem;background:var(--card-bg);border:1px solid var(--border);border-radius:10px;cursor:pointer;color:var(--text-primary);font-size:.88rem">' +
+          '<span style="font-weight:600;color:var(--accent)">' + label + '</span>' +
+          '<span style="color:var(--text-muted);margin-left:.5rem">&#8594;</span>' +
+          '<b style="margin-left:.3rem">' + p.id + '</b>' +
+          '<span style="color:var(--text-muted);font-size:.8rem;margin-left:.4rem">km ' + p.km.toFixed(3) + '</span>' +
+          '</button>';
+      }
+      res.innerHTML = '<div style="padding:.5rem 0"><p style="color:var(--text-muted);font-size:.82rem;margin-bottom:.6rem">Km <b>' + q + '</b> — ¿En cuál tramo?</p>' + tramosHtml + '</div>';
+      return;
+    }
+
   } else {
-    // Búsqueda por ID de piquete (parcial o exacta)
-    const qLower = q.toLowerCase().replace(/\s/g,'');
-    // Primero exacta
-    for (const [id, data] of Object.entries(PIQUETES_DB)) {
-      if (id.toLowerCase().replace(/\s/g,'') === qLower) {
-        found = {id, ...data};
+    // --- MODO PIQUETE ---
+    var qLower = q.toLowerCase().replace(/\s/g,'');
+    var keys2 = Object.keys(PIQUETES_DB);
+    for (var j = 0; j < keys2.length; j++) {
+      if (keys2[j].toLowerCase().replace(/\s/g,'') === qLower) {
+        var d = PIQUETES_DB[keys2[j]];
+        found = {id: keys2[j], km: d.km, via: d.via, via_num: d.via_num, sistema: d.sistema, tramo: d.tramo, vias: d.vias, especial: d.especial};
         break;
       }
     }
-    // Si no, parcial
     if (!found) {
-      const matches = [];
-      for (const [id, data] of Object.entries(PIQUETES_DB)) {
-        if (id.toLowerCase().includes(qLower)) matches.push({id, ...data});
+      var matches = [];
+      for (var k = 0; k < keys2.length; k++) {
+        if (keys2[k].toLowerCase().includes(qLower)) {
+          var dk = PIQUETES_DB[keys2[k]];
+          matches.push({id: keys2[k], km: dk.km, via: dk.via, via_num: dk.via_num, sistema: dk.sistema, tramo: dk.tramo, vias: dk.vias, especial: dk.especial});
+        }
       }
-      if (matches.length === 1) found = matches[0];
-      else if (matches.length > 1) {
-        // Mostrar lista de opciones
-        res.innerHTML = `<div style="padding:.5rem 0">
-          <p style="color:var(--text-muted);font-size:.8rem;margin-bottom:.5rem">Se encontraron ${matches.length} coincidencias:</p>
-          ${matches.slice(0,8).map(m => `<button onclick="seleccionarPiquete('${m.id}')" 
-            style="display:block;width:100%;text-align:left;padding:.5rem .7rem;margin-bottom:.3rem;
-            background:var(--card-bg);border:1px solid var(--border);border-radius:8px;cursor:pointer;
-            color:var(--text-primary);font-size:.88rem">
-            <b>${m.id}</b> — Km ${m.km.toFixed(3)} — ${m.via}
-          </button>`).join('')}
-          ${matches.length > 8 ? `<p style="font-size:.75rem;color:var(--text-muted);text-align:center">...y ${matches.length-8} más. Afinás la búsqueda.</p>` : ''}
-        </div>`;
+      if (matches.length === 1) {
+        found = matches[0];
+      } else if (matches.length > 1) {
+        var matchHtml = '<div style="padding:.5rem 0"><p style="color:var(--text-muted);font-size:.8rem;margin-bottom:.5rem">Se encontraron ' + matches.length + ' coincidencias:</p>';
+        var shown = matches.slice(0,8);
+        for (var mi = 0; mi < shown.length; mi++) {
+          var m = shown[mi];
+          matchHtml += '<button onclick="seleccionarPiquete(\'' + m.id.replace(/'/g,"\\'") + '\')" style="display:block;width:100%;text-align:left;padding:.5rem .7rem;margin-bottom:.3rem;background:var(--card-bg);border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--text-primary);font-size:.88rem"><b>' + m.id + '</b> \u2014 Km ' + m.km.toFixed(3) + ' \u2014 ' + m.via + '</button>';
+        }
+        if (matches.length > 8) matchHtml += '<p style="font-size:.75rem;color:var(--text-muted);text-align:center">...y ' + (matches.length-8) + ' m\u00e1s. Afin\u00e1 la b\u00fasqueda.</p>';
+        matchHtml += '</div>';
+        res.innerHTML = matchHtml;
         return;
       }
     }
   }
 
   if (!found) {
-    res.innerHTML = `<div style="text-align:center;padding:1rem;color:var(--text-muted)">
-      <div style="font-size:2rem">🔍</div>
-      <p style="margin:.5rem 0">No se encontró el piquete <b>"${q}"</b></p>
-      <p style="font-size:.78rem">Probá con el formato: 5-18-16 o un km como 27.5</p>
-    </div>`;
+    var hint = buscadorModo === 'km' ? 'Probá con un número de km. Ej: 5 o 27.450' : 'Probá con el formato: 5-18-16';
+    res.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--text-muted)"><div style="font-size:2rem">🔍</div><p style="margin:.5rem 0">No se encontró <b>"' + q + '"</b></p><p style="font-size:.78rem">' + hint + '</p></div>';
     return;
   }
 
   mostrarResultadoPiquete(found);
+}
+
+function abrirModalInfo() {
+  var m = document.getElementById('modal-info');
+  m.style.display = 'flex';
 }
 
 function seleccionarPiquete(id) {
@@ -3263,9 +3363,130 @@ if ('serviceWorker' in navigator) {
     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     Piquetes
   </button>
+  <!-- INFO -->
+  <button class="bottom-nav-btn" id="btn-info" onclick="abrirModalInfo()" title="Info">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="8" stroke-width="3" stroke-linecap="round"/><line x1="12" y1="12" x2="12" y2="16"/></svg>
+    Info
+  </button>
 </nav>
 
 </div>
+<!-- MODAL INFO / ACRÓNIMOS -->
+<div id="modal-info" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:flex-end;justify-content:center">
+  <div style="background:var(--surface);border-radius:20px 20px 0 0;padding:1.25rem 1.25rem 2rem;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;box-shadow:0 -4px 24px rgba(0,0,0,.3)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+      <h3 style="font-size:1rem;font-weight:700;color:var(--text-primary);margin:0">Acrónimos y Referencias</h3>
+      <button onclick="document.getElementById('modal-info').style.display='none'"
+        style="background:var(--border);border:none;border-radius:50%;width:30px;height:30px;font-size:1.1rem;cursor:pointer;color:var(--text-muted);display:flex;align-items:center;justify-content:center">✕</button>
+    </div>
+
+    <!-- Sistemas -->
+    <div style="margin-bottom:1rem">
+      <div style="font-size:.72rem;font-weight:700;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem">Sistemas de catenaria</div>
+      <div style="display:flex;flex-direction:column;gap:.35rem">
+        <div style="display:flex;gap:.75rem;align-items:baseline">
+          <span style="font-weight:700;color:var(--text-primary);min-width:52px;font-size:.88rem">LDF</span>
+          <span style="color:var(--text-muted);font-size:.85rem">Línea de Feeding — alimentación ascendente</span>
+        </div>
+        <div style="display:flex;gap:.75rem;align-items:baseline">
+          <span style="font-weight:700;color:var(--text-primary);min-width:52px;font-size:.88rem">LDS</span>
+          <span style="color:var(--text-muted);font-size:.85rem">Línea de Suministro — alimentación descendente</span>
+        </div>
+        <div style="display:flex;gap:.75rem;align-items:baseline">
+          <span style="font-weight:700;color:var(--text-primary);min-width:52px;font-size:.88rem">TN</span>
+          <span style="color:var(--text-muted);font-size:.85rem">Tramo Neutro — sección sin tensión entre fases</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vías -->
+    <div style="margin-bottom:1rem">
+      <div style="font-size:.72rem;font-weight:700;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem">Vías</div>
+      <div style="display:flex;flex-direction:column;gap:.35rem">
+        <div style="display:flex;gap:.75rem;align-items:baseline">
+          <span style="font-weight:700;color:var(--text-primary);min-width:52px;font-size:.88rem">Vía 1</span>
+          <span style="color:var(--text-muted);font-size:.85rem">Ascendente exterior (hacia Constitución)</span>
+        </div>
+        <div style="display:flex;gap:.75rem;align-items:baseline">
+          <span style="font-weight:700;color:var(--text-primary);min-width:52px;font-size:.88rem">Vía 2</span>
+          <span style="color:var(--text-muted);font-size:.85rem">Descendente exterior (hacia La Plata / ramales)</span>
+        </div>
+        <div style="display:flex;gap:.75rem;align-items:baseline">
+          <span style="font-weight:700;color:var(--text-primary);min-width:52px;font-size:.88rem">Vía 3</span>
+          <span style="color:var(--text-muted);font-size:.85rem">Ascendente interior (cuádruple vía)</span>
+        </div>
+        <div style="display:flex;gap:.75rem;align-items:baseline">
+          <span style="font-weight:700;color:var(--text-primary);min-width:52px;font-size:.88rem">Vía 4</span>
+          <span style="color:var(--text-muted);font-size:.85rem">Descendente interior (cuádruple vía)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tramos -->
+    <div style="margin-bottom:1rem">
+      <div style="font-size:.72rem;font-weight:700;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem">Tramos</div>
+      <div style="display:flex;flex-direction:column;gap:.35rem">
+        <div style="display:flex;gap:.75rem;align-items:baseline">
+          <span style="font-weight:700;color:var(--text-primary);min-width:52px;font-size:.88rem">1 y 3</span>
+          <span style="color:var(--text-muted);font-size:.85rem">Tramo de cuádruple vía (Constitución - Temperley)</span>
+        </div>
+        <div style="display:flex;gap:.75rem;align-items:baseline">
+          <span style="font-weight:700;color:var(--text-primary);min-width:52px;font-size:.88rem">5/15/19</span>
+          <span style="color:var(--text-muted);font-size:.85rem">Ramales Quilmes / La Plata / Bosques</span>
+        </div>
+        <div style="display:flex;gap:.75rem;align-items:baseline">
+          <span style="font-weight:700;color:var(--text-primary);min-width:52px;font-size:.88rem">7</span>
+          <span style="color:var(--text-muted);font-size:.85rem">Tramo Temperley - Ezeiza / Alejandro Korn</span>
+        </div>
+        <div style="display:flex;gap:.75rem;align-items:baseline">
+          <span style="font-weight:700;color:var(--text-primary);min-width:52px;font-size:.88rem">9</span>
+          <span style="color:var(--text-muted);font-size:.85rem">Tramo ramal Alejandro Korn - Guernica</span>
+        </div>
+        <div style="display:flex;gap:.75rem;align-items:baseline">
+          <span style="font-weight:700;color:var(--text-primary);min-width:52px;font-size:.88rem">11</span>
+          <span style="color:var(--text-muted);font-size:.85rem">Tramo ramal Temperley - Florencio Varela</span>
+        </div>
+        <div style="display:flex;gap:.75rem;align-items:baseline">
+          <span style="font-weight:700;color:var(--text-primary);min-width:52px;font-size:.88rem">13</span>
+          <span style="color:var(--text-muted);font-size:.85rem">Tramo ramal Bosques - Ranelagh / Sourigues</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Otros -->
+    <div style="margin-bottom:.5rem">
+      <div style="font-size:.72rem;font-weight:700;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem">Otros</div>
+      <div style="display:flex;flex-direction:column;gap:.35rem">
+        <div style="display:flex;gap:.75rem;align-items:baseline">
+          <span style="font-weight:700;color:var(--text-primary);min-width:52px;font-size:.88rem">PSA</span>
+          <span style="color:var(--text-muted);font-size:.85rem">Parrilla de Sección de Alimentación</span>
+        </div>
+        <div style="display:flex;gap:.75rem;align-items:baseline">
+          <span style="font-weight:700;color:var(--text-primary);min-width:52px;font-size:.88rem">PSE</span>
+          <span style="color:var(--text-muted);font-size:.85rem">Parrilla de Sección de Estación</span>
+        </div>
+        <div style="display:flex;gap:.75rem;align-items:baseline">
+          <span style="font-weight:700;color:var(--text-primary);min-width:52px;font-size:.88rem">PSEPC</span>
+          <span style="color:var(--text-muted);font-size:.85rem">Parrilla de Sección de Estación Paso a Cruce</span>
+        </div>
+        <div style="display:flex;gap:.75rem;align-items:baseline">
+          <span style="font-weight:700;color:var(--text-primary);min-width:52px;font-size:.88rem">CCEE</span>
+          <span style="color:var(--text-muted);font-size:.85rem">Centro de Control de Energía Eléctrica</span>
+        </div>
+        <div style="display:flex;gap:.75rem;align-items:baseline">
+          <span style="font-weight:700;color:var(--text-primary);min-width:52px;font-size:.88rem">PaT</span>
+          <span style="color:var(--text-muted);font-size:.85rem">Puesta a Tierra</span>
+        </div>
+        <div style="display:flex;gap:.75rem;align-items:baseline">
+          <span style="font-weight:700;color:var(--text-primary);min-width:52px;font-size:.88rem">MF</span>
+          <span style="color:var(--text-muted);font-size:.85rem">Mayor Función — cargo con responsabilidad adicional</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <!-- MODAL CERRAR SESIÓN -->
 <div id="modal-logout" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9998;align-items:center;justify-content:center;padding:1.5rem">
   <div style="background:var(--surface);border-radius:16px;padding:1.5rem;width:100%;max-width:300px;box-shadow:0 8px 32px rgba(0,0,0,.25)">
