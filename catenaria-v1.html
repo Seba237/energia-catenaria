@@ -2967,8 +2967,26 @@ function updateBottomNav(screenId) {
   }
 }
 
-function llamarCCEE() {
-  window.location.href = 'tel:01168967936';
+var _cceeTimer = null;
+function iniciarLlamadaCCEE() {
+  var btn = document.getElementById('btn-ccee');
+  btn.style.transition = 'transform 2s linear';
+  btn.style.transform = 'scale(1.2)';
+  btn.style.opacity = '0.6';
+  _cceeTimer = setTimeout(function() {
+    btn.style.transform = '';
+    btn.style.opacity = '';
+    window.location.href = 'tel:01168967936';
+  }, 2000);
+}
+function cancelarLlamadaCCEE() {
+  if (_cceeTimer) {
+    clearTimeout(_cceeTimer);
+    _cceeTimer = null;
+  }
+  var btn = document.getElementById('btn-ccee');
+  btn.style.transform = '';
+  btn.style.opacity = '';
 }
 
 function bottomNavBack() {
@@ -3352,6 +3370,11 @@ if ('serviceWorker' in navigator) {
 
 <!-- BARRA NAVEGACIÓN INFERIOR -->
 <nav class="bottom-nav" id="bottomNav" style="display:none">
+  <!-- CCEE -->
+  <button class="bottom-nav-btn" id="btn-ccee" onmousedown="iniciarLlamadaCCEE()" onmouseup="cancelarLlamadaCCEE()" onmouseleave="cancelarLlamadaCCEE()" ontouchstart="iniciarLlamadaCCEE()" ontouchend="cancelarLlamadaCCEE()" title="CCEE" style="color:#e74c3c;">
+    <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.49 12 19.79 19.79 0 0 1 1.4 3.35 2 2 0 0 1 3.37 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 8.91a16 16 0 0 0 5.61 5.61l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+    CCEE
+  </button>
   <!-- ATRÁS -->
   <button class="bottom-nav-btn" id="btn-atras" onclick="bottomNavBack()" title="Atrás">
     <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
@@ -3361,11 +3384,6 @@ if ('serviceWorker' in navigator) {
   <button class="bottom-nav-btn" id="btn-inicio" onclick="bottomNavHome()" title="Inicio">
     <svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9.5z"/><polyline points="9 21 9 12 15 12 15 21"/></svg>
     Inicio
-  </button>
-  <!-- CCEE -->
-  <button class="bottom-nav-btn" id="btn-ccee" onclick="llamarCCEE()" title="CCEE" style="color:#e74c3c;">
-    <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.49 12 19.79 19.79 0 0 1 1.4 3.35 2 2 0 0 1 3.37 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 8.91a16 16 0 0 0 5.61 5.61l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-    CCEE
   </button>
   <!-- INFO -->
   <button class="bottom-nav-btn" id="btn-info" onclick="abrirModalInfo()" title="Info">
