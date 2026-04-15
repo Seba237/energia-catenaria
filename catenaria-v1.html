@@ -2364,16 +2364,16 @@ function showFallaStep(id) {
   if (el) { el.style.display = 'block'; el.scrollIntoView({behavior:'smooth', block:'nearest'}); }
 }
 
-var PLANI_BASE = 'https://raw.githubusercontent.com/Seba237/energia-catenaria/main/Planimetr%C3%ADa/';
+var PLANI_BASE = 'https://github.com/Seba237/energia-catenaria/raw/main/Planimetria/';
 var PLANI_FILES = [
-  {nombre: 'Bocetos Velocidades LGR', archivo: 'Bocetos Velocidades LGR.pdf', tipo: 'pdf'},
+  {nombre: 'Croquis Velocidades LGR', archivo: 'Croquis Velocidades LGR.pdf', tipo: 'pdf'},
   {nombre: 'Esquema CABINA TOLOSA', archivo: 'Esquema CABINA TOLOSA.pdf', tipo: 'pdf'},
   {nombre: 'Esquema LGR por tramo', archivo: 'Esquema LGR por tramo.jpg', tipo: 'img'},
-  {nombre: 'Esquema depósito TOLOSA', archivo: 'Esquema dep\u00f3sito TOLOSA.pdf', tipo: 'pdf'},
-  {nombre: 'Estaciones Sarandí - La Plata', archivo: 'Estaciones Sarand\u00ed-La_Plata.pdf', tipo: 'pdf'},
-  {nombre: 'LGR Líneas de catenaria', archivo: 'LGR L\u00edneas de catenaria.pdf', tipo: 'pdf'},
-  {nombre: 'LGR Líneas de distribución y catenaria', archivo: 'LGR L\u00edneas de distribuci\u00f3n y catenaria.pdf', tipo: 'pdf'},
-  {nombre: 'Plaza Constitución Sectores con Catenaria', archivo: 'Plaza Constituci\u00f3n Sectores con Catenaria.pdf', tipo: 'pdf'},
+  {nombre: 'Esquema deposito TOLOSA', archivo: 'Esquema deposito TOLOSA.pdf', tipo: 'pdf'},
+  {nombre: 'Estaciones Sarandi - La Plata', archivo: 'Estaciones Sarandi-La_Plata.pdf', tipo: 'pdf'},
+  {nombre: 'LGR Lineas de catenaria', archivo: 'LGR Lineas de catenaria.pdf', tipo: 'pdf'},
+  {nombre: 'LGR Lineas de distribucion y catenaria', archivo: 'LGR Lineas de distribuci\u00f3n y catenaria.pdf', tipo: 'pdf'},
+  {nombre: 'Plaza Constitucion Sectores con Catenaria', archivo: 'Plaza Constitucion Sectores con Catenaria.pdf', tipo: 'pdf'},
   {nombre: 'UNIFILARES - RTU', archivo: 'UNIFILARES - RTU.pdf', tipo: 'pdf'},
   {nombre: 'Quilmes completo final', archivo: 'quilmes_completo_final_2.pdf', tipo: 'pdf'}
 ];
@@ -2385,8 +2385,8 @@ function showPlanimetria() {
   PLANI_FILES.forEach(function(p) {
     var btn = document.createElement('button');
     btn.style.cssText = 'display:flex;align-items:center;gap:.8rem;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.85rem 1rem;cursor:pointer;text-align:left;color:var(--text-primary)';
-    var icono = p.tipo === 'pdf' ? '📄' : '🖼️';
-    btn.innerHTML = '<span style="font-size:1.5rem;flex-shrink:0">' + icono + '</span>' +
+    var icono = '<svg viewBox="0 0 24 24" style="width:28px;height:28px;flex-shrink:0;stroke:var(--accent);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>';
+    btn.innerHTML = icono +
       '<div><div style="font-weight:600;font-size:.9rem">' + p.nombre + '</div>' +
       '<div style="font-size:.75rem;color:var(--text-muted);margin-top:.15rem">' + p.tipo.toUpperCase() + '</div></div>';
     btn.onclick = function() { abrirPlano(p); };
