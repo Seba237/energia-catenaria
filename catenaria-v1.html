@@ -700,7 +700,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
         Ingresar
       </button>
     </div>
-    <p style="text-align:center;color:rgba(255,255,255,.35);font-size:.72rem;margin-top:1.5rem">v3.9 · Desarrollado por Sebastián Pérez</p>
+    <p style="text-align:center;color:rgba(255,255,255,.35);font-size:.72rem;margin-top:1.5rem">v4.0 · Desarrollado por Sebastián Pérez</p>
   </div>
 </div>
 
@@ -2396,7 +2396,7 @@ function showPlanimetria() {
 }
 
 function abrirPlano(p) {
-  var url = PLANI_BASE + encodeURIComponent(p.archivo);
+  var url = PLANI_BASE + encodeURI(p.archivo);
   window.open(url, '_blank');
 }
 
