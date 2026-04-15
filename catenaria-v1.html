@@ -700,7 +700,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
         Ingresar
       </button>
     </div>
-    <p style="text-align:center;color:rgba(255,255,255,.35);font-size:.72rem;margin-top:1.5rem">v3.8 · Desarrollado por Sebastián Pérez</p>
+    <p style="text-align:center;color:rgba(255,255,255,.35);font-size:.72rem;margin-top:1.5rem">v3.9 · Desarrollado por Sebastián Pérez</p>
   </div>
 </div>
 
@@ -834,11 +834,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
       <button class="back-btn" onclick="goBack('planimetria')">‹</button>
       <h2>🗺️ Planimetría</h2>
     </div>
-    <div id="plan-list" style="padding:2rem 1rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;text-align:center">
-      <div style="font-size:3rem;line-height:1">🗺️</div>
-      <div style="font-size:1.05rem;font-weight:700;color:var(--text)">Próximamente</div>
-      <div style="font-size:.82rem;color:var(--text-muted);line-height:1.6;max-width:260px">Los planos de la línea estarán disponibles en una próxima versión.</div>
-    </div>
+    <div id="plan-list" style="padding:1rem;display:flex;flex-direction:column;gap:.6rem">
     <!-- VISOR FULLSCREEN -->
     <div id="plan-viewer" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#111;z-index:9999;flex-direction:column">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:.5rem .8rem;background:#1a1a2e;flex-shrink:0">
@@ -2368,10 +2364,43 @@ function showFallaStep(id) {
   if (el) { el.style.display = 'block'; el.scrollIntoView({behavior:'smooth', block:'nearest'}); }
 }
 
+var PLANI_BASE = 'https://raw.githubusercontent.com/Seba237/energia-catenaria/main/Planimetr%C3%ADa/';
+var PLANI_FILES = [
+  {nombre: 'Bocetos Velocidades LGR', archivo: 'Bocetos Velocidades LGR.pdf', tipo: 'pdf'},
+  {nombre: 'Esquema CABINA TOLOSA', archivo: 'Esquema CABINA TOLOSA.pdf', tipo: 'pdf'},
+  {nombre: 'Esquema LGR por tramo', archivo: 'Esquema LGR por tramo.jpg', tipo: 'img'},
+  {nombre: 'Esquema depósito TOLOSA', archivo: 'Esquema dep\u00f3sito TOLOSA.pdf', tipo: 'pdf'},
+  {nombre: 'Estaciones Sarandí - La Plata', archivo: 'Estaciones Sarand\u00ed-La_Plata.pdf', tipo: 'pdf'},
+  {nombre: 'LGR Líneas de catenaria', archivo: 'LGR L\u00edneas de catenaria.pdf', tipo: 'pdf'},
+  {nombre: 'LGR Líneas de distribución y catenaria', archivo: 'LGR L\u00edneas de distribuci\u00f3n y catenaria.pdf', tipo: 'pdf'},
+  {nombre: 'Plaza Constitución Sectores con Catenaria', archivo: 'Plaza Constituci\u00f3n Sectores con Catenaria.pdf', tipo: 'pdf'},
+  {nombre: 'UNIFILARES - RTU', archivo: 'UNIFILARES - RTU.pdf', tipo: 'pdf'},
+  {nombre: 'Quilmes completo final', archivo: 'quilmes_completo_final_2.pdf', tipo: 'pdf'}
+];
+
 function showPlanimetria() {
   if(window._analytics) window._analytics('pantalla',{nombre:'Planimetría'});
+  var lista = document.getElementById('plan-list');
+  lista.innerHTML = '';
+  PLANI_FILES.forEach(function(p) {
+    var btn = document.createElement('button');
+    btn.style.cssText = 'display:flex;align-items:center;gap:.8rem;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.85rem 1rem;cursor:pointer;text-align:left;color:var(--text-primary)';
+    var icono = p.tipo === 'pdf' ? '📄' : '🖼️';
+    btn.innerHTML = '<span style="font-size:1.5rem;flex-shrink:0">' + icono + '</span>' +
+      '<div><div style="font-weight:600;font-size:.9rem">' + p.nombre + '</div>' +
+      '<div style="font-size:.75rem;color:var(--text-muted);margin-top:.15rem">' + p.tipo.toUpperCase() + '</div></div>';
+    btn.onclick = function() { abrirPlano(p); };
+    lista.appendChild(btn);
+  });
   navegarA('planimetria');
 }
+
+function abrirPlano(p) {
+  var url = PLANI_BASE + encodeURIComponent(p.archivo);
+  window.open(url, '_blank');
+}
+
+
 
 let prevScreen = 'home';
 
