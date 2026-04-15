@@ -700,7 +700,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
         Ingresar
       </button>
     </div>
-    <p style="text-align:center;color:rgba(255,255,255,.35);font-size:.72rem;margin-top:1.5rem">v3.7 · Desarrollado por Sebastián Pérez</p>
+    <p style="text-align:center;color:rgba(255,255,255,.35);font-size:.72rem;margin-top:1.5rem">v3.8 · Desarrollado por Sebastián Pérez</p>
   </div>
 </div>
 
@@ -3155,17 +3155,31 @@ function updateBottomNav(screenId) {
   }
 }
 
+function fotoId(piqId) {
+  // Si tiene foto directa la devuelve, si no busca el impar anterior (par → impar)
+  if (PIQ_FOTOS.has(piqId)) return piqId;
+  var partes = piqId.split('-');
+  var num = parseInt(partes[2]);
+  if (num % 2 === 0) {
+    var impar = partes[0] + '-' + partes[1] + '-' + String(num - 1).padStart(2, '0');
+    if (PIQ_FOTOS.has(impar)) return impar;
+  }
+  return null;
+}
+
+function tieneFoto(piqId) { return fotoId(piqId) !== null; }
+
 function verFotoPiquete(piqId) {
+  var id = fotoId(piqId);
+  if (!id) return;
   var base = 'https://raw.githubusercontent.com/Seba237/energia-catenaria/main/Fotos/';
-  // Probar con el nombre exacto del piquete primero
   var img = new Image();
-  img.onload = function() { window.open(base + piqId + '.jpg', '_blank'); };
+  img.onload = function() { window.open(base + id + '.jpg', '_blank'); };
   img.onerror = function() {
-    // Si no existe, probar con cero adelante
-    var conCero = piqId.replace(/^(\d+)/, function(m) { return m.padStart(2,'0'); });
+    var conCero = id.replace(/^(\d+)/, function(m) { return m.padStart(2,'0'); });
     window.open(base + conCero + '.jpg', '_blank');
   };
-  img.src = base + piqId + '.jpg';
+  img.src = base + id + '.jpg';
 }
 
 function llamarCCEE() {
@@ -3444,7 +3458,7 @@ function mostrarResultado(piqId, data, container) {
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
         <h3 style="margin:0;font-size:1.1rem">📍 Piquete ${piqId}</h3>
         <div style="display:flex;align-items:center;gap:.5rem">
-          ${PIQ_FOTOS.has(piqId) ?
+          ${tieneFoto(piqId) ?
             '<button onclick="verFotoPiquete(\'' + piqId + '\')" style="background:none;border:none;cursor:pointer;font-size:1.4rem;padding:0" title="Ver foto">📷</button>' :
             '<span style="font-size:1.4rem;opacity:.35;text-decoration:line-through" title="Sin foto">📷</span>'
           }
