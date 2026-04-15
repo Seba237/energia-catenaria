@@ -700,7 +700,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
         Ingresar
       </button>
     </div>
-    <p style="text-align:center;color:rgba(255,255,255,.35);font-size:.72rem;margin-top:1.5rem">v3.6 · Desarrollado por Sebastián Pérez</p>
+    <p style="text-align:center;color:rgba(255,255,255,.35);font-size:.72rem;margin-top:1.5rem">v3.7 · Desarrollado por Sebastián Pérez</p>
   </div>
 </div>
 
@@ -3156,9 +3156,16 @@ function updateBottomNav(screenId) {
 }
 
 function verFotoPiquete(piqId) {
-  var nombreArchivo = piqId.replace(/^(\d+)/, function(m) { return m.padStart(2,'0'); });
-  var url = 'https://raw.githubusercontent.com/Seba237/energia-catenaria/main/Fotos/' + nombreArchivo + '.jpg';
-  window.open(url, '_blank');
+  var base = 'https://raw.githubusercontent.com/Seba237/energia-catenaria/main/Fotos/';
+  // Probar con el nombre exacto del piquete primero
+  var img = new Image();
+  img.onload = function() { window.open(base + piqId + '.jpg', '_blank'); };
+  img.onerror = function() {
+    // Si no existe, probar con cero adelante
+    var conCero = piqId.replace(/^(\d+)/, function(m) { return m.padStart(2,'0'); });
+    window.open(base + conCero + '.jpg', '_blank');
+  };
+  img.src = base + piqId + '.jpg';
 }
 
 function llamarCCEE() {
