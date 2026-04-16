@@ -700,7 +700,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
         Ingresar
       </button>
     </div>
-    <p style="text-align:center;color:rgba(255,255,255,.35);font-size:.72rem;margin-top:1.5rem">v4.4 · Desarrollado por Sebastián Pérez</p>
+    <p style="text-align:center;color:rgba(255,255,255,.35);font-size:.72rem;margin-top:1.5rem">v4.6 · Desarrollado por Sebastián Pérez</p>
   </div>
 </div>
 
@@ -3333,21 +3333,43 @@ function buscarPiquete(val) {
   if (found) { mostrarResultado(val, found, res); if(window._analytics) window._analytics('busqueda'); return; }
 
   // Búsqueda por km
-  const kmVal = parseFloat(val.replace(',','.'));
+  var kmVal = parseFloat(val.replace(',','.'));
   if (!isNaN(kmVal)) {
-    const byKm = Object.entries(PIQ_DB)
-      .filter(([k,v]) => Math.abs(v[0]-kmVal) < 0.05)
-      .sort((a,b) => Math.abs(a[1][0]-kmVal) - Math.abs(b[1][0]-kmVal))
-      .slice(0,5);
+    var byKm = Object.entries(PIQ_DB)
+      .filter(function(e) { return Math.abs(e[1][0]-kmVal) < 0.05; })
+      .sort(function(a,b) { return Math.abs(a[1][0]-kmVal) - Math.abs(b[1][0]-kmVal); });
     if (byKm.length) {
-      mostrarResultado(byKm[0][0], byKm[0][1], res);
-      if (byKm.length > 1) {
-        sug.innerHTML = '<p style="font-size:.78rem;color:var(--text-muted);margin:.5rem 0 .3rem">Piquetes cercanos:</p>';
-        byKm.slice(1).forEach(([k,v]) => {
-          const btn = document.createElement('button');
-          btn.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.5rem .8rem;text-align:left;cursor:pointer;font-size:.82rem;margin-bottom:.3rem;width:100%';
-          btn.innerHTML = `<b>${k}</b> — Km ${v[0].toFixed(3)} — ${v[1]}`;
-          btn.onclick = () => { document.getElementById('buscador-input').value=k; buscarPiquete(k); };
+      // Agrupar por tramo — mostrar el más cercano de cada tramo
+      var porTramo = {};
+      byKm.forEach(function(e) {
+        var tramo = e[1][3];
+        if (!porTramo[tramo]) porTramo[tramo] = e;
+      });
+      var tramosUnicos = Object.values(porTramo);
+      if (tramosUnicos.length === 1) {
+        // Un solo tramo — mostrar resultado directo
+        mostrarResultado(byKm[0][0], byKm[0][1], res);
+        var cercanos = byKm.slice(1,5);
+        if (cercanos.length) {
+          sug.innerHTML = '<p style="font-size:.78rem;color:var(--text-muted);margin:.5rem 0 .3rem">Piquetes cercanos:</p>';
+          cercanos.forEach(function(e) {
+            var k = e[0], v = e[1];
+            var btn = document.createElement('button');
+            btn.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.5rem .8rem;text-align:left;cursor:pointer;font-size:.82rem;margin-bottom:.3rem;width:100%';
+            btn.innerHTML = '<b>' + k + '</b> — Km ' + v[0].toFixed(3) + ' — ' + v[2];
+            btn.onclick = (function(pk,pv){ return function(){ document.getElementById('buscador-input').value=pk; buscarPiquete(pk); }; })(k,v);
+            sug.appendChild(btn);
+          });
+        }
+      } else {
+        // Múltiples tramos — mostrar una opción por tramo
+        res.innerHTML = '<div style="padding:.5rem 0;font-size:.82rem;color:var(--text-muted)">Km ' + kmVal.toFixed(3) + ' existe en varios tramos. Seleccioná el tuyo:</div>';
+        tramosUnicos.forEach(function(e) {
+          var k = e[0], v = e[1];
+          var btn = document.createElement('button');
+          btn.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.6rem 1rem;text-align:left;cursor:pointer;font-size:.88rem;margin-bottom:.4rem;width:100%;display:flex;justify-content:space-between;align-items:center';
+          btn.innerHTML = '<span><b>' + v[3] + '</b> — ' + k + '</span><span style="color:var(--text-muted);font-size:.78rem">Km ' + v[0].toFixed(3) + '</span>';
+          btn.onclick = (function(pk){ return function(){ document.getElementById('buscador-input').value=pk; buscarPiquete(pk); }; })(k);
           sug.appendChild(btn);
         });
       }
@@ -3355,22 +3377,45 @@ function buscarPiquete(val) {
     }
   }
 
-  // Búsqueda parcial
+  // Búsqueda parcial por inicio
   const partial = Object.entries(PIQ_DB).filter(([k])=>k.startsWith(val)).slice(0,6);
   if (partial.length === 1) {
-    mostrarResultado(partial[0][0], partial[0][1], res);
+    mostrarResultado(partial[0][0], partial[0][1], res); return;
   } else if (partial.length > 1) {
     sug.innerHTML = '<p style="font-size:.78rem;color:var(--text-muted);margin:.5rem 0 .3rem">¿Quisiste decir?</p>';
     partial.forEach(([k,v]) => {
       const btn = document.createElement('button');
       btn.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.5rem .8rem;text-align:left;cursor:pointer;font-size:.82rem;margin-bottom:.3rem;width:100%';
-      btn.innerHTML = `<b>${k}</b> — Km ${v[0].toFixed(3)} — ${v[1]}`;
-      btn.onclick = () => { document.getElementById('buscador-input').value=k; buscarPiquete(k); };
+      btn.innerHTML = '<b>' + k + '</b> — Km ' + v[0].toFixed(3) + ' — ' + v[1];
+      btn.onclick = (function(pk){ return function(){ document.getElementById('buscador-input').value=pk; buscarPiquete(pk); }; })(k);
       sug.appendChild(btn);
     });
-  } else {
-    res.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text-muted);font-size:.9rem">❌ Piquete no encontrado.<br><small>Verificá el número o buscá por km.</small></div>';
+    return;
   }
+
+  // Búsqueda por sufijo vano-piquete (ej: "18-16" sin tramo)
+  if (/^\d+-\d+$/.test(val)) {
+    var porSufijo = Object.entries(PIQ_DB).filter(function(e) {
+      var partes = e[0].split('-');
+      return (partes[1]+'-'+partes[2]).startsWith(val) || (partes[1].replace(/^0/,'')+'-'+partes[2]).startsWith(val);
+    }).slice(0,6);
+    if (porSufijo.length === 1) {
+      mostrarResultado(porSufijo[0][0], porSufijo[0][1], res); return;
+    } else if (porSufijo.length > 1) {
+      sug.innerHTML = '<p style="font-size:.78rem;color:var(--text-muted);margin:.5rem 0 .3rem">Piquetes con vano ' + val + ':</p>';
+      porSufijo.forEach(function(e) {
+        var k = e[0], v = e[1];
+        var btn = document.createElement('button');
+        btn.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.5rem .8rem;text-align:left;cursor:pointer;font-size:.82rem;margin-bottom:.3rem;width:100%';
+        btn.innerHTML = '<b>' + k + '</b> — Km ' + v[0].toFixed(3) + ' — ' + v[2];
+        btn.onclick = (function(pk){ return function(){ document.getElementById('buscador-input').value=pk; buscarPiquete(pk); }; })(k);
+        sug.appendChild(btn);
+      });
+      return;
+    }
+  }
+
+  res.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text-muted);font-size:.9rem">❌ Piquete no encontrado.<br><small>Verificá el número o buscá por km.</small></div>';
 }
 
 function mostrarResultado(piqId, data, container) {
