@@ -700,7 +700,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
         Ingresar
       </button>
     </div>
-    <p style="text-align:center;color:rgba(255,255,255,.35);font-size:.72rem;margin-top:1.5rem">v4.6 · Desarrollado por Sebastián Pérez</p>
+    <p style="text-align:center;color:rgba(255,255,255,.35);font-size:.72rem;margin-top:1.5rem">v4.7 · Desarrollado por Sebastián Pérez</p>
   </div>
 </div>
 
@@ -1800,6 +1800,10 @@ emergencia: `
         <span class="info-block-chevron">›</span>
       </div>
       <div class="info-block-body">
+        <div style="background:#FEF3C7;border:1px solid #F59E0B;border-radius:8px;padding:.6rem .8rem;margin-bottom:.75rem;display:flex;gap:.5rem;align-items:flex-start">
+          <span style="font-size:1.1rem;flex-shrink:0">⚠️</span>
+          <p style="font-size:.78rem;color:#92400E;margin:0;line-height:1.5"><strong>Información posiblemente desactualizada.</strong> Verificar disponibilidad y estado operativo de los equipos antes de su uso.</p>
+        </div>
         <p style="font-size:.8rem;color:var(--text-muted);margin-bottom:.6rem;line-height:1.55">Los DEA se encuentran en la oficina de auxiliares de cada estación, salvo excepciones indicadas.</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:.35rem .5rem">
           ${['Quilmes','Lomas de Zamora','Llavallol','Glew','Villa Elisa','La Plata','Ezeiza','Lanús','D.Santillán y M.Kosteki','Témperley','Berazategui'].map(e=>`<div style="font-size:.78rem;padding:.3rem .4rem;background:var(--surface2);border-radius:6px">💛 ${e}</div>`).join('')}
