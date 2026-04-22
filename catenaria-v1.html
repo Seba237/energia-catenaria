@@ -700,7 +700,66 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
         Ingresar
       </button>
     </div>
-    <p style="text-align:center;color:rgba(255,255,255,.35);font-size:.72rem;margin-top:1.5rem">v5.4 · Desarrollado por Sebastián Pérez</p>
+    <p style="text-align:center;margin-top:1.5rem">
+      <button onclick="toggleChangelog()" style="background:none;border:none;color:rgba(255,255,255,.35);font-size:.72rem;cursor:pointer;padding:.2rem .5rem;border-radius:6px">v5.5 · Desarrollado por Sebastián Pérez ›</button>
+    </p>
+
+    <!-- CHANGELOG MODAL -->
+    <div id="changelog-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;overflow-y:auto;padding:1.5rem 1rem" onclick="if(event.target===this)toggleChangelog()">
+      <div style="background:#1E3060;border-radius:16px;max-width:420px;margin:0 auto;padding:1.25rem;border:1px solid rgba(255,255,255,.1)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+          <div>
+            <div style="font-size:1rem;font-weight:700;color:#fff">🚀 Novedades</div>
+            <div style="font-size:.72rem;color:rgba(255,255,255,.45)">Historial de mejoras</div>
+          </div>
+          <button onclick="toggleChangelog()" style="background:rgba(255,255,255,.1);border:none;color:#fff;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:.9rem">✕</button>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:.5rem">
+
+          <div style="background:rgba(255,255,255,.07);border-radius:10px;padding:.65rem .85rem;border-left:3px solid #7C3AED">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.25rem">
+              <span style="font-size:.82rem;font-weight:700;color:#fff">🔌 Fallas en Distribución</span>
+              <span style="font-size:.68rem;color:rgba(255,255,255,.4)">v5.x</span>
+            </div>
+            <div style="font-size:.75rem;color:rgba(255,255,255,.6);line-height:1.5">Módulo interactivo con flujograma paso a paso. Selector de base (Quilmes, Temperley, Plaza, Varela). 6 líneas independientes con bisección automática calculada desde la planilla.</div>
+          </div>
+
+          <div style="background:rgba(255,255,255,.07);border-radius:10px;padding:.65rem .85rem;border-left:3px solid #2563EB">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.25rem">
+              <span style="font-size:.82rem;font-weight:700;color:#fff">📷 Fotos de piquetes</span>
+              <span style="font-size:.68rem;color:rgba(255,255,255,.4)">v3.8</span>
+            </div>
+            <div style="font-size:.75rem;color:rgba(255,255,255,.6);line-height:1.5">+700 fotos del ramal La Plata. Ícono 📷 en cada búsqueda. Lógica par/impar automática.</div>
+          </div>
+
+          <div style="background:rgba(255,255,255,.07);border-radius:10px;padding:.65rem .85rem;border-left:3px solid #059669">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.25rem">
+              <span style="font-size:.82rem;font-weight:700;color:#fff">🗺️ Planimetría</span>
+              <span style="font-size:.68rem;color:rgba(255,255,255,.4)">v4.1</span>
+            </div>
+            <div style="font-size:.75rem;color:rgba(255,255,255,.6);line-height:1.5">10 planos y esquemas en PDF. Visor integrado sin necesidad de descargar.</div>
+          </div>
+
+          <div style="background:rgba(255,255,255,.07);border-radius:10px;padding:.65rem .85rem;border-left:3px solid #D97706">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.25rem">
+              <span style="font-size:.82rem;font-weight:700;color:#fff">🔍 Buscador mejorado</span>
+              <span style="font-size:.68rem;color:rgba(255,255,255,.4)">v4.6</span>
+            </div>
+            <div style="font-size:.75rem;color:rgba(255,255,255,.6);line-height:1.5">Búsqueda por vano-piquete sin tramo (ej: 18-16). Km con múltiples tramos agrupa opciones por tramo. 4.953 piquetes verificados.</div>
+          </div>
+
+          <div style="background:rgba(255,255,255,.07);border-radius:10px;padding:.65rem .85rem;border-left:3px solid #DC2626">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.25rem">
+              <span style="font-size:.82rem;font-weight:700;color:#fff">📞 Botón CCEE</span>
+              <span style="font-size:.68rem;color:rgba(255,255,255,.4)">v3.4</span>
+            </div>
+            <div style="font-size:.75rem;color:rgba(255,255,255,.6);line-height:1.5">Llamada directa al CCEE desde la barra inferior. Acceso rápido en campo.</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -770,58 +829,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
         <div class="home-card-icon">🔥</div>
         <div class="home-card-label">Incendio</div>
         <div class="home-card-sub">Lucha contra el fuego</div>
-      </div>
-    </div>
-
-    <!-- CHANGELOG -->
-    <div style="margin:1rem 0 .5rem;padding:0 .25rem">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem">
-        <div style="font-size:.75rem;font-weight:700;color:var(--text-muted);letter-spacing:.06em;text-transform:uppercase">Novedades de la app</div>
-        <div style="font-size:.7rem;color:var(--accent);font-weight:600">v5.3</div>
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:.45rem">
-
-        <div style="background:var(--surface);border-radius:10px;padding:.65rem .85rem;border-left:3px solid #7C3AED">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.2rem">
-            <span style="font-size:.8rem;font-weight:700;color:var(--text-primary)">🔌 Fallas en Distribución</span>
-            <span style="font-size:.68rem;color:var(--text-muted)">v5.x</span>
-          </div>
-          <div style="font-size:.75rem;color:var(--text-muted);line-height:1.5">Módulo interactivo con flujograma paso a paso. Selector de base (Quilmes, Temperley, Plaza, Varela). 6 líneas independientes (50F, 50S, 60F, 60S, 62F, 62S) con bisección automática calculada desde la planilla.</div>
-        </div>
-
-        <div style="background:var(--surface);border-radius:10px;padding:.65rem .85rem;border-left:3px solid #2563EB">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.2rem">
-            <span style="font-size:.8rem;font-weight:700;color:var(--text-primary)">📷 Fotos de piquetes</span>
-            <span style="font-size:.68rem;color:var(--text-muted)">v3.8</span>
-          </div>
-          <div style="font-size:.75rem;color:var(--text-muted);line-height:1.5">+700 fotos del ramal La Plata. Ícono 📷 en cada búsqueda. Lógica par/impar automática. Piquetes sin foto muestran cámara tachada.</div>
-        </div>
-
-        <div style="background:var(--surface);border-radius:10px;padding:.65rem .85rem;border-left:3px solid #059669">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.2rem">
-            <span style="font-size:.8rem;font-weight:700;color:var(--text-primary)">🗺️ Planimetría</span>
-            <span style="font-size:.68rem;color:var(--text-muted)">v4.1</span>
-          </div>
-          <div style="font-size:.75rem;color:var(--text-muted);line-height:1.5">10 planos y esquemas de la línea en PDF. Visor integrado sin necesidad de descargar. Acceso directo desde el home.</div>
-        </div>
-
-        <div style="background:var(--surface);border-radius:10px;padding:.65rem .85rem;border-left:3px solid #D97706">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.2rem">
-            <span style="font-size:.8rem;font-weight:700;color:var(--text-primary)">🔍 Buscador de piquetes mejorado</span>
-            <span style="font-size:.68rem;color:var(--text-muted)">v4.6</span>
-          </div>
-          <div style="font-size:.75rem;color:var(--text-muted);line-height:1.5">Búsqueda por vano-piquete sin tramo (ej: 18-16). Km con múltiples tramos muestra opciones agrupadas. Base de datos: 4.953 piquetes corregidos y verificados.</div>
-        </div>
-
-        <div style="background:var(--surface);border-radius:10px;padding:.65rem .85rem;border-left:3px solid #DC2626">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.2rem">
-            <span style="font-size:.8rem;font-weight:700;color:var(--text-primary)">📞 Botón CCEE</span>
-            <span style="font-size:.68rem;color:var(--text-muted)">v3.4</span>
-          </div>
-          <div style="font-size:.75rem;color:var(--text-muted);line-height:1.5">Llamada directa al CCEE desde la barra inferior. Acceso rápido en campo sin buscar el número.</div>
-        </div>
-
       </div>
     </div>
 
@@ -3286,6 +3293,12 @@ function verFotoPiquete(piqId) {
     window.open(base + conCero + '.jpg', '_blank');
   };
   img.src = base + id + '.jpg';
+}
+
+function toggleChangelog() {
+  var modal = document.getElementById('changelog-modal');
+  if (!modal) return;
+  modal.style.display = modal.style.display === 'none' ? 'block' : 'none';
 }
 
 function llamarCCEE() {
