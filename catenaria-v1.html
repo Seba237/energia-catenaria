@@ -700,7 +700,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
         Ingresar
       </button>
     </div>
-    <p style="text-align:center;color:rgba(255,255,255,.35);font-size:.72rem;margin-top:1.5rem">v4.7 · Desarrollado por Sebastián Pérez</p>
+    <p style="text-align:center;color:rgba(255,255,255,.35);font-size:.72rem;margin-top:1.5rem">v4.9 · Desarrollado por Sebastián Pérez</p>
   </div>
 </div>
 
@@ -2334,38 +2334,100 @@ function showFallasCatenaria() {
 }
 
 function showFallasDistribucion() {
-  const c = document.getElementById('fallas-content');
-  c.innerHTML = `<div style="padding:.5rem 0 0">
+  var c = document.getElementById('fallas-content');
+  c.innerHTML = '<div style="padding:.5rem 0 0">'
 
-    <div style="padding:1rem">
-      <div class="falla-node falla-start">🔌 Falla en Sistema de Distribución</div>
-      <div class="falla-arrow">▼</div>
-      <div class="falla-node falla-action">📞 Notificar a CCEE y Jefe de turno</div>
-      <div class="falla-arrow">▼</div>
-      <div class="falla-node falla-question">¿Afecta suministro a tracción?</div>
-      <div style="display:flex;gap:.5rem;margin:.5rem 0">
-        <div style="flex:1">
-          <div style="text-align:center;font-size:.75rem;color:#ef4444;font-weight:700">SÍ</div>
-          <div class="falla-node falla-danger">⛔ Coordinar corte con subestación</div>
-          <div class="falla-arrow">▼</div>
-          <div class="falla-node falla-action">🔧 Diagnóstico: alimentador / trafo / seccionador</div>
-          <div class="falla-arrow">▼</div>
-          <div class="falla-node falla-action">🛠️ Intervención con personal habilitado</div>
-          <div class="falla-arrow">▼</div>
-          <div class="falla-node falla-ok">✅ Reposición y prueba de servicio</div>
-        </div>
-        <div style="flex:1">
-          <div style="text-align:center;font-size:.75rem;color:#22c55e;font-weight:700">NO</div>
-          <div class="falla-node falla-info">📋 Registrar anomalía en bitácora</div>
-          <div class="falla-arrow">▼</div>
-          <div class="falla-node falla-action">🔍 Inspección programada</div>
-          <div class="falla-arrow">▼</div>
-          <div class="falla-node falla-ok">✅ Seguimiento preventivo</div>
-        </div>
-      </div>
-    </div>
-  </div>`;
+  // Header base
+  + '<div style="background:var(--surface);border-left:4px solid #7C3AED;border-radius:0 10px 10px 0;padding:.7rem 1rem;margin:0 1rem .75rem">'
+  + '<div style="font-size:.7rem;color:#7C3AED;font-weight:700;letter-spacing:.05em;text-transform:uppercase">Base Catenaria</div>'
+  + '<div style="font-weight:700;font-size:1rem;color:var(--text-primary)">Quilmes — Fallas en LDF y LDS</div>'
+  + '</div>'
+
+  // Origen
+  + '<div style="margin:0 1rem .75rem">'
+  + '<div style="font-weight:700;font-size:.85rem;color:var(--text-primary);margin-bottom:.4rem">📡 Origen de la falla</div>'
+  + '<div style="background:var(--surface);border-radius:10px;padding:.75rem;font-size:.82rem;color:var(--text-muted);line-height:1.6">'
+  + 'El <b>CCEE</b> da aviso de la falla a la guardia. Se deberán cruzar datos con el personal de <b>Subestación Quilmes</b>, quienes verificarán protecciones y parrilla, y proporcionarán esa información al personal de catenaria.'
+  + '</div></div>'
+
+  // Lineas de referencia
+  + '<div style="margin:0 1rem .75rem">'
+  + '<div style="font-weight:700;font-size:.85rem;color:var(--text-primary);margin-bottom:.4rem">🔌 Líneas por sector</div>'
+  + '<div style="background:var(--surface);border-radius:10px;padding:.75rem;font-size:.82rem;line-height:1.8">'
+  + '<div><span style="font-weight:700;color:#2563EB">50F / 50S</span> — SEQUI → PS Avellaneda</div>'
+  + '<div><span style="font-weight:700;color:#2563EB">60F / 60S</span> — SEQUI → PSA Villa Elisa</div>'
+  + '<div><span style="font-weight:700;color:#2563EB">62F / 62S</span> — SEQUI → La Plata</div>'
+  + '</div></div>'
+
+  // Tipo 1 - Entre fase
+  + '<div style="margin:0 1rem .6rem">'
+  + '<div style="background:#EDE9FE;border-radius:10px;padding:.6rem 1rem;cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="toggleDistFalla(\'entrefase\')">'
+  + '<div><span style="font-size:1rem">⚡</span> <b style="color:#5B21B6">Falla entre fase</b></div>'
+  + '<span id="chv-entrefase" style="color:#7C3AED;font-weight:700;font-size:1.1rem">+</span>'
+  + '</div>'
+  + '<div id="body-entrefase" style="display:none;background:var(--surface);border:1px solid #DDD6FE;border-top:none;border-radius:0 0 10px 10px;padding:.75rem;font-size:.82rem;color:var(--text-muted);line-height:1.6">'
+  + '<div style="margin-bottom:.5rem"><b>Factores:</b> Rama, barrilete, etc.</div>'
+  + '<div style="margin-bottom:.5rem"><b>Búsqueda inicial:</b><br>• 1 persona hace recorrida visual en tren.<br>• La guardia sale con el móvil según la línea en falla.</div>'
+  + '<div style="background:#F5F3FF;border-radius:8px;padding:.6rem;margin:.5rem 0">'
+  + '<div style="font-weight:700;color:#5B21B6;margin-bottom:.4rem">Ejemplo — Línea 50F / 50S:</div>'
+  + '<div style="margin-bottom:.4rem">Inspección visual con el móvil. <b>Seccionamiento al 50% de la línea</b> en acometida de estación <b>(Est. Don Bosco)</b>. Se abren seccionadores o se desvincula. Se solicita energizar.</div>'
+  + '<div style="background:#DCFCE7;border-radius:6px;padding:.4rem .6rem;margin:.3rem 0"><b>✅ A — Línea entra:</b> la falla está entre Don Bosco y PS Avellaneda. Repetir al 50% → Est. Villa Domínico.</div>'
+  + '<div style="background:#FEE2E2;border-radius:6px;padding:.4rem .6rem;margin:.3rem 0"><b>❌ B — Falla energización:</b> la falla está entre SEQUI y Don Bosco. Seccionar al 50% → Est. Bernal. Repetir.</div>'
+  + '<div style="margin-top:.4rem">Así se <b>acorrala la falla</b> para sectorizar. Luego recorrida a pie.</div>'
+  + '</div></div></div>'
+
+  // Tipo 2 - Fase a tierra
+  + '<div style="margin:0 1rem .6rem">'
+  + '<div style="background:#FEF3C7;border-radius:10px;padding:.6rem 1rem;cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="toggleDistFalla(\'fastierra\')">'
+  + '<div><span style="font-size:1rem">🌍</span> <b style="color:#92400E">Falla fase a tierra</b></div>'
+  + '<span id="chv-fastierra" style="color:#D97706;font-weight:700;font-size:1.1rem">+</span>'
+  + '</div>'
+  + '<div id="body-fastierra" style="display:none;background:var(--surface);border:1px solid #FDE68A;border-top:none;border-radius:0 0 10px 10px;padding:.75rem;font-size:.82rem;color:var(--text-muted);line-height:1.6">'
+  + '<div style="margin-bottom:.5rem"><b>Factores:</b> Cable subterráneo, descargador de sobretensión, etc.</div>'
+  + '<div style="margin-bottom:.5rem"><b>Búsqueda inicial:</b><br>• 1 persona hace recorrida visual en tren.<br>• La guardia sale con el móvil según la línea en falla.</div>'
+  + '<div style="background:#FFFBEB;border-radius:8px;padding:.6rem;margin:.5rem 0">'
+  + '<div style="font-weight:700;color:#92400E;margin-bottom:.4rem">Ejemplo — Línea 50F / 50S:</div>'
+  + '<div style="margin-bottom:.4rem">Inspección visual con el móvil. <b>Seccionamiento al 50% de la línea</b> en acometida de estación <b>(Est. Don Bosco)</b>. Se abren seccionadores o se desvincula. Se solicita energizar.</div>'
+  + '<div style="background:#DCFCE7;border-radius:6px;padding:.4rem .6rem;margin:.3rem 0"><b>✅ A — Línea entra:</b> la falla está entre Don Bosco y PS Avellaneda. Repetir al 50% → Est. Villa Domínico.</div>'
+  + '<div style="background:#FEE2E2;border-radius:6px;padding:.4rem .6rem;margin:.3rem 0"><b>❌ B — Falla energización:</b> la falla está entre SEQUI y Don Bosco. Seccionar al 50% → Est. Bernal. Repetir.</div>'
+  + '<div style="margin-top:.4rem">Así se <b>acorrala la falla</b> para sectorizar. Luego recorrida a pie.</div>'
+  + '</div></div></div>'
+
+  // Tipo 3 - Falta una fase
+  + '<div style="margin:0 1rem .6rem">'
+  + '<div style="background:#FEE2E2;border-radius:10px;padding:.6rem 1rem;cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="toggleDistFalla(\'faltafase\')">'
+  + '<div><span style="font-size:1rem">⚠️</span> <b style="color:#991B1B">Falta una fase</b></div>'
+  + '<span id="chv-faltafase" style="color:#DC2626;font-weight:700;font-size:1.1rem">+</span>'
+  + '</div>'
+  + '<div id="body-faltafase" style="display:none;background:var(--surface);border:1px solid #FECACA;border-top:none;border-radius:0 0 10px 10px;padding:.75rem;font-size:.82rem;color:var(--text-muted);line-height:1.6">'
+  + '<div style="background:#FEF3C7;border:1px solid #F59E0B;border-radius:8px;padding:.5rem .7rem;margin-bottom:.6rem">'
+  + '<b style="color:#92400E">⚠️ Importante:</b> <span style="color:#78350F">La línea permanece energizada. No actúan las protecciones. Tener en cuenta al operar.</span>'
+  + '</div>'
+  + '<div style="margin-bottom:.5rem"><b>Factores:</b> Chicote cortado, base portafusible rajada, etc.</div>'
+  + '<div style="margin-bottom:.5rem">El CCEE puede detectarlo al inspeccionar el panel en puesto de cabecera o final, o por aviso de sector sin energía (cabina de señales, estación).</div>'
+  + '<div style="margin-bottom:.5rem"><b>Primera acción:</b> Consultar a Subestación Quilmes y CCEE los valores de corriente y tensión para determinar en qué línea está la falla.</div>'
+  + '<div style="background:#FFF1F2;border-radius:8px;padding:.6rem;margin:.5rem 0">'
+  + '<div style="font-weight:700;color:#991B1B;margin-bottom:.5rem">Ejemplo — Falta fase entre SEQUI y PS Avellaneda (50F o 50S):</div>'
+  + '<div style="margin-bottom:.5rem"><b>A — Falla en 50F (fuerza):</b><br>'
+  + 'Ir al 50% de la línea → <b>Est. Don Bosco</b>. Medir tensión con tester en secundario del centro compacto (trafo trifásico). Si cada fase con neutro da <b>220V</b> → ese tramo está bien. La falla está entre Don Bosco y PS Avellaneda. Ir al 50% → Est. Villa Domínico, repetir.<br><br>'
+  + 'Si da mal entre SEQUI y Don Bosco → ir al 50% → <b>Est. Bernal</b>, repetir.</div>'
+  + '<div><b>B — Falla en 50S (señales):</b><br>'
+  + 'Mismo procedimiento, pero verificando en las estaciones los transformadores alimentados desde la <b>línea de señales</b>.</div>'
+  + '</div></div></div>'
+
+  + '<div style="height:1.5rem"></div>'
+  + '</div>';
 }
+
+function toggleDistFalla(id) {
+  var body = document.getElementById('body-' + id);
+  var chv = document.getElementById('chv-' + id);
+  if (!body) return;
+  var open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  chv.textContent = open ? '+' : '−';
+}
+
 
 function showFallaStep(id) {
   const el = document.getElementById('falla-step-' + id);
