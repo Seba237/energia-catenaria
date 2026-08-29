@@ -701,7 +701,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
       </button>
     </div>
     <p style="text-align:center;margin-top:1.5rem">
-      <button onclick="toggleChangelog()" style="background:none;border:none;color:rgba(255,255,255,.35);font-size:.72rem;cursor:pointer;padding:.2rem .5rem;border-radius:6px">v5.72 · Desarrollado por Sebastián Pérez ›</button>
+      <button onclick="toggleChangelog()" style="background:none;border:none;color:rgba(255,255,255,.35);font-size:.72rem;cursor:pointer;padding:.2rem .5rem;border-radius:6px">v5.73 · Desarrollado por Sebastián Pérez ›</button>
     </p>
 
     <!-- CHANGELOG MODAL -->
@@ -2940,6 +2940,9 @@ function mostrarResultadoPiquete(p) {
         <div>
           <div style="color:#fff;font-size:1.1rem;font-weight:800">Piquete ${p.id}</div>
           <div style="color:rgba(255,255,255,.8);font-size:.75rem">Tramo ${p.tramo} · Vía ${p.vias}</div>
+        </div>
+        <div style="margin-left:auto">
+          ${tieneFoto(p.id) ? '<button onclick="verFotoPiquete(\'' + p.id + '\')" style="background:rgba(255,255,255,.15);border:none;cursor:pointer;font-size:1.4rem;padding:.2rem .4rem;border-radius:8px" title="Ver foto">📷</button>' : '<span style="font-size:1.4rem;opacity:.35;text-decoration:line-through" title="Sin foto">📷</span>'}
         </div>
       </div>
 
