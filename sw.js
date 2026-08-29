@@ -1,51 +1,72 @@
-// Incrementar este número cada vez que se actualiza la app
-const VERSION = '1.1';
-const CACHE = 'energia-catenaria-' + VERSION;
+// ── VERSIÓN — incrementar con cada deploy ──────────────────
+const VERSION = '5.71';
+const CACHE = 'catenaria-' + VERSION;
 
-self.addEventListener('install', e => {
-  // Activar inmediatamente sin esperar
-  self.skipWaiting();
-});
+// Archivos a cachear en la instalación
+const ASSETS = [
+  './catenaria-v1.html',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png',
+];
 
-self.addEventListener('activate', e => {
-  // Borrar todos los cachés viejos
+// ── INSTALL: pre-cachear assets principales ─────────────────
+self.addEventListener('install', function(e) {
+  self.skipWaiting(); // Activar inmediatamente
   e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => {
-        console.log('Borrando caché viejo:', k);
-        return caches.delete(k);
-      }))
-    ).then(() => self.clients.claim())
+    caches.open(CACHE).then(function(cache) {
+      return cache.addAll(ASSETS).catch(function(err) {
+        console.log('Cache install error:', err);
+      });
+    })
   );
 });
 
-self.addEventListener('fetch', e => {
-  // Para el HTML principal: siempre buscar en red primero
+// ── ACTIVATE: borrar cachés viejos ───────────────────────────
+self.addEventListener('activate', function(e) {
+  e.waitUntil(
+    caches.keys().then(function(keys) {
+      return Promise.all(
+        keys.filter(function(k) { return k !== CACHE; })
+            .map(function(k) {
+              console.log('Borrando caché viejo:', k);
+              return caches.delete(k);
+            })
+      );
+    }).then(function() {
+      return self.clients.claim(); // Tomar control de todas las pestañas
+    })
+  );
+});
+
+// ── FETCH: red primero, caché como respaldo ──────────────────
+self.addEventListener('fetch', function(e) {
+  // Para el HTML principal: siempre intentar red primero
   if (e.request.url.includes('catenaria-v1.html')) {
     e.respondWith(
-      fetch(e.request)
-        .then(response => {
-          const clone = response.clone();
-          caches.open(CACHE).then(c => c.put(e.request, clone));
-          return response;
-        })
-        .catch(() => caches.match(e.request))
+      fetch(e.request).then(function(response) {
+        var clone = response.clone();
+        caches.open(CACHE).then(function(cache) { cache.put(e.request, clone); });
+        return response;
+      }).catch(function() {
+        return caches.match(e.request);
+      })
     );
     return;
   }
   // Para el resto: red primero, caché como respaldo
   e.respondWith(
-    fetch(e.request)
-      .then(response => {
-        const clone = response.clone();
-        caches.open(CACHE).then(c => c.put(e.request, clone));
-        return response;
-      })
-      .catch(() => caches.match(e.request))
+    fetch(e.request).then(function(response) {
+      var clone = response.clone();
+      caches.open(CACHE).then(function(cache) { cache.put(e.request, clone); });
+      return response;
+    }).catch(function() {
+      return caches.match(e.request);
+    })
   );
 });
 
-// Notificar a todos los clientes cuando hay actualización
-self.addEventListener('message', e => {
+// ── MENSAJE: forzar activación ───────────────────────────────
+self.addEventListener('message', function(e) {
   if (e.data === 'skipWaiting') self.skipWaiting();
 });

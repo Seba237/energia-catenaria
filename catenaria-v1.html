@@ -3795,24 +3795,41 @@ function abrirPlano(p) {
 
 <script>
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', async () => {
-    try {
-      const reg = await navigator.serviceWorker.register('sw.js');
-      // Verificar actualizaciones cada vez que se abre la app
-      reg.addEventListener('updatefound', () => {
-        const newSW = reg.installing;
-        newSW.addEventListener('statechange', () => {
+  // Versión de la app — debe coincidir con sw.js
+  var APP_VERSION = '5.71';
+
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('sw.js').then(function(reg) {
+
+      // Forzar chequeo inmediato de actualización
+      reg.update();
+
+      // Cuando hay un SW nuevo instalándose
+      reg.addEventListener('updatefound', function() {
+        var newSW = reg.installing;
+        newSW.addEventListener('statechange', function() {
           if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
-            // Hay versión nueva — recargar automáticamente
             newSW.postMessage('skipWaiting');
-            window.location.reload();
           }
         });
       });
-      // Forzar chequeo de actualización
-      reg.update();
-    } catch(e) {
+
+      // Cuando el SW activo cambia → recargar para aplicar nueva versión
+      navigator.serviceWorker.addEventListener('controllerchange', function() {
+        window.location.reload();
+      });
+
+    }).catch(function(e) {
       console.log('SW error:', e);
+    });
+  });
+
+  // Verificar versión al volver a primer plano (ej: usuario minimizó y volvió)
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible') {
+      navigator.serviceWorker.getRegistration().then(function(reg) {
+        if (reg) reg.update();
+      });
     }
   });
 }
