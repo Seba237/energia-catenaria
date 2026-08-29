@@ -1,5 +1,5 @@
 // ── VERSIÓN — incrementar con cada deploy ──────────────────
-const VERSION = '5.73';
+const VERSION = '5.74';
 const CACHE = 'catenaria-' + VERSION;
 
 // ── INSTALL ─────────────────────────────────────────────────
