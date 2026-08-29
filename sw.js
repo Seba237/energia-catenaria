@@ -1,51 +1,60 @@
-// Incrementar este número cada vez que se actualiza la app
-const VERSION = '1.1';
-const CACHE = 'energia-catenaria-' + VERSION;
+// ── VERSIÓN — incrementar con cada deploy ──────────────────
+const VERSION = '5.73';
+const CACHE = 'catenaria-' + VERSION;
 
-self.addEventListener('install', e => {
-  // Activar inmediatamente sin esperar
+// ── INSTALL ─────────────────────────────────────────────────
+self.addEventListener('install', function(e) {
   self.skipWaiting();
 });
 
-self.addEventListener('activate', e => {
-  // Borrar todos los cachés viejos
+// ── ACTIVATE: borrar cachés viejos ───────────────────────────
+self.addEventListener('activate', function(e) {
   e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => {
-        console.log('Borrando caché viejo:', k);
-        return caches.delete(k);
-      }))
-    ).then(() => self.clients.claim())
+    caches.keys().then(function(keys) {
+      return Promise.all(
+        keys.filter(function(k) { return k !== CACHE; })
+            .map(function(k) { return caches.delete(k); })
+      );
+    }).then(function() {
+      return self.clients.claim();
+    })
   );
 });
 
-self.addEventListener('fetch', e => {
-  // Para el HTML principal: siempre buscar en red primero
+// ── FETCH: solo cachear GET, nunca POST ──────────────────────
+self.addEventListener('fetch', function(e) {
+  // Ignorar requests que no son GET
+  if (e.request.method !== 'GET') return;
+
+  // Para el HTML principal: siempre red primero
   if (e.request.url.includes('catenaria-v1.html')) {
     e.respondWith(
-      fetch(e.request)
-        .then(response => {
-          const clone = response.clone();
-          caches.open(CACHE).then(c => c.put(e.request, clone));
-          return response;
-        })
-        .catch(() => caches.match(e.request))
+      fetch(e.request).then(function(response) {
+        var clone = response.clone();
+        caches.open(CACHE).then(function(cache) { cache.put(e.request, clone); });
+        return response;
+      }).catch(function() {
+        return caches.match(e.request);
+      })
     );
     return;
   }
-  // Para el resto: red primero, caché como respaldo
+
+  // Para el resto de GET: red primero, caché como respaldo
   e.respondWith(
-    fetch(e.request)
-      .then(response => {
-        const clone = response.clone();
-        caches.open(CACHE).then(c => c.put(e.request, clone));
-        return response;
-      })
-      .catch(() => caches.match(e.request))
+    fetch(e.request).then(function(response) {
+      if (response && response.status === 200) {
+        var clone = response.clone();
+        caches.open(CACHE).then(function(cache) { cache.put(e.request, clone); });
+      }
+      return response;
+    }).catch(function() {
+      return caches.match(e.request);
+    })
   );
 });
 
-// Notificar a todos los clientes cuando hay actualización
-self.addEventListener('message', e => {
+// ── MENSAJE ──────────────────────────────────────────────────
+self.addEventListener('message', function(e) {
   if (e.data === 'skipWaiting') self.skipWaiting();
 });
